@@ -1,0 +1,94 @@
+name: config-validate
+
+on:
+  workflow_call:
+    inputs:
+      pipelines_glob:
+        description: "Glob for pipeline config YAML files"
+        required: false
+        type: string
+        default: "ingestion/configs/pipelines/**/*.y*ml"
+      sources_glob:
+        description: "Glob for source config YAML files"
+        required: false
+        type: string
+        default: "ingestion/configs/sources/**/*.y*ml"
+      resources_glob:
+        description: "Glob for resource config YAML files"
+        required: false
+        type: string
+        default: "ingestion/configs/resources/**/*.y*ml"
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout caller repo
+        uses: actions/checkout@v4
+
+      - name: Checkout schemas (this repo)
+        uses: actions/checkout@v4
+        with:
+          repository: midhilesh-grm/mm_databridge-ci-templates
+          path: ci-templates
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: Install validator deps
+        run: |
+          python -m pip install --upgrade pip
+          pip install jsonschema pyyaml
+
+      - name: Validate configs against schemas
+        env:
+          PIPELINES_GLOB: ${{ inputs.pipelines_glob }}
+          SOURCES_GLOB: ${{ inputs.sources_glob }}
+          RESOURCES_GLOB: ${{ inputs.resources_glob }}
+        run: |
+          python - <<'PY'
+          import glob
+          import json
+          import os
+          from pathlib import Path
+
+          import yaml
+          from jsonschema import Draft202012Validator
+
+          repo_root = Path('.').resolve()
+          templates_root = repo_root / 'ci-templates'
+          schemas_dir = templates_root / 'schemas'
+
+          def load_schema(name: str) -> dict:
+              schema_path = schemas_dir / name
+              return json.loads(schema_path.read_text(encoding='utf-8'))
+
+          def validate_files(files, schema_name: str) -> None:
+              schema = load_schema(schema_name)
+              validator = Draft202012Validator(schema)
+              for file_path in files:
+                  data = yaml.safe_load(Path(file_path).read_text(encoding='utf-8'))
+                  errors = sorted(validator.iter_errors(data), key=lambda e: e.path)
+                  if errors:
+                      messages = [f"{file_path}: {e.message} (path={list(e.path)})" for e in errors[:20]]
+                      raise SystemExit("\n".join(messages))
+
+          pipelines = glob.glob(os.environ['PIPELINES_GLOB'], recursive=True)
+          sources = glob.glob(os.environ['SOURCES_GLOB'], recursive=True)
+          resources = glob.glob(os.environ['RESOURCES_GLOB'], recursive=True)
+
+          # Only validate when files exist; markets may start with partial config sets.
+          if pipelines:
+              validate_files(pipelines, 'pipeline_config.schema.json')
+          if sources:
+              validate_files(sources, 'source_config.schema.json')
+          if resources:
+              validate_files(resources, 'resource_config.schema.json')
+
+          print(f"Validated: pipelines={len(pipelines)}, sources={len(sources)}, resources={len(resources)}")
+          PY

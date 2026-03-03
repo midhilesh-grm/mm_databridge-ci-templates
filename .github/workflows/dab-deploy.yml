@@ -1,0 +1,52 @@
+name: dab-deploy
+
+on:
+  workflow_call:
+    inputs:
+      bundle_root:
+        description: "Path to the Databricks bundle root"
+        required: false
+        type: string
+        default: "."
+      target:
+        description: "DAB target name (e.g. dev)"
+        required: true
+        type: string
+      deploy:
+        description: "If true, deploy the bundle (otherwise validate only)"
+        required: false
+        type: boolean
+        default: false
+    secrets:
+      DATABRICKS_HOST:
+        required: true
+      DATABRICKS_TOKEN:
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  bundle:
+    runs-on: ubuntu-latest
+    env:
+      DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST }}
+      DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
+
+    steps:
+      - name: Checkout caller repo
+        uses: actions/checkout@v4
+
+      - name: Setup Databricks CLI
+        uses: databricks/setup-cli@main
+
+      - name: Bundle validate
+        working-directory: ${{ inputs.bundle_root }}
+        run: |
+          databricks bundle validate -t "${{ inputs.target }}"
+
+      - name: Bundle deploy
+        if: ${{ inputs.deploy }}
+        working-directory: ${{ inputs.bundle_root }}
+        run: |
+          databricks bundle deploy -t "${{ inputs.target }}"
