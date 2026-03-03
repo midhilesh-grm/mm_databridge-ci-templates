@@ -1,1967 +1,1977 @@
 {
-  "$defs": {
-    "ApiKeyAuthConfig": {
-      "additionalProperties": false,
-      "description": "API Key authentication configuration.",
-      "properties": {
-        "api_key": {
-          "description": "API key value (use ${secrets.xxx} for secret reference)",
-          "title": "Api Key",
-          "type": "string"
-        },
-        "location": {
-          "default": "query",
-          "description": "Where to send the API key",
-          "enum": [
-            "query",
-            "header"
-          ],
-          "title": "Location",
-          "type": "string"
-        },
-        "name": {
-          "description": "Name of the API key parameter",
-          "title": "Name",
-          "type": "string"
-        },
-        "type": {
-          "const": "api_key",
-          "default": "api_key",
-          "title": "Type",
-          "type": "string"
-        }
-      },
-      "required": [
-        "name",
-        "api_key"
-      ],
-      "title": "ApiKeyAuthConfig",
-      "type": "object"
-    },
-    "BasicAuthConfig": {
-      "additionalProperties": false,
-      "description": "Basic authentication configuration.",
-      "properties": {
-        "password": {
-          "description": "Password (use ${secrets.xxx} for secret reference)",
-          "title": "Password",
-          "type": "string"
-        },
-        "type": {
-          "const": "basic",
-          "default": "basic",
-          "title": "Type",
-          "type": "string"
-        },
-        "username": {
-          "description": "Username (use ${secrets.xxx} for secret reference)",
-          "title": "Username",
-          "type": "string"
-        }
-      },
-      "required": [
-        "username",
-        "password"
-      ],
-      "title": "BasicAuthConfig",
-      "type": "object"
-    },
-    "BearerTokenAuthConfig": {
-      "additionalProperties": false,
-      "description": "Bearer token authentication configuration.",
-      "properties": {
-        "token": {
-          "description": "Bearer token (use ${secrets.xxx} for secret reference)",
-          "title": "Token",
-          "type": "string"
-        },
-        "type": {
-          "const": "bearer_token",
-          "default": "bearer_token",
-          "title": "Type",
-          "type": "string"
-        }
-      },
-      "required": [
-        "token"
-      ],
-      "title": "BearerTokenAuthConfig",
-      "type": "object"
-    },
-    "CursorPaginatorConfig": {
-      "additionalProperties": false,
-      "description": "Cursor-based pagination configuration.",
-      "properties": {
-        "cursor_param": {
-          "default": "after",
-          "description": "Query parameter name for cursor",
-          "title": "Cursor Param",
-          "type": "string"
-        },
-        "cursor_path": {
-          "default": "cursors.next",
-          "description": "JSONPath to cursor value in response",
-          "title": "Cursor Path",
-          "type": "string"
-        },
-        "type": {
-          "const": "cursor",
-          "default": "cursor",
-          "title": "Type",
-          "type": "string"
-        }
-      },
-      "title": "CursorPaginatorConfig",
-      "type": "object"
-    },
-    "DQCheckCustomSql": {
-      "additionalProperties": false,
-      "description": "Custom SQL check configuration.",
-      "properties": {
-        "max_failures": {
-          "default": 0,
-          "description": "Maximum allowed failures (0 = no failures allowed)",
-          "minimum": 0,
-          "title": "Max Failures",
-          "type": "integer"
-        },
-        "query": {
-          "description": "SQL query returning failure count (use {table} placeholder)",
-          "title": "Query",
-          "type": "string"
-        },
-        "severity": {
-          "$ref": "#/$defs/DQSeverity",
-          "default": "error",
-          "description": "Severity level if check fails"
-        },
-        "type": {
-          "const": "custom_sql",
-          "default": "custom_sql",
-          "title": "Type",
-          "type": "string"
-        }
-      },
-      "required": [
-        "query"
-      ],
-      "title": "DQCheckCustomSql",
-      "type": "object"
-    },
-    "DQCheckFreshness": {
-      "additionalProperties": false,
-      "description": "Data freshness check configuration.",
-      "properties": {
-        "column": {
-          "description": "Timestamp column to check for freshness",
-          "title": "Column",
-          "type": "string"
-        },
-        "max_age_hours": {
-          "description": "Maximum allowed age in hours",
-          "minimum": 1,
-          "title": "Max Age Hours",
-          "type": "integer"
-        },
-        "severity": {
-          "$ref": "#/$defs/DQSeverity",
-          "default": "error",
-          "description": "Severity level if check fails"
-        },
-        "type": {
-          "const": "freshness",
-          "default": "freshness",
-          "title": "Type",
-          "type": "string"
-        }
-      },
-      "required": [
-        "column",
-        "max_age_hours"
-      ],
-      "title": "DQCheckFreshness",
-      "type": "object"
-    },
-    "DQCheckNotNull": {
-      "additionalProperties": false,
-      "description": "Not null check configuration.",
-      "properties": {
-        "columns": {
-          "description": "Columns to check for null values",
-          "items": {
-            "type": "string"
-          },
-          "minItems": 1,
-          "title": "Columns",
-          "type": "array"
-        },
-        "severity": {
-          "$ref": "#/$defs/DQSeverity",
-          "default": "error",
-          "description": "Severity level if check fails"
-        },
-        "type": {
-          "const": "not_null",
-          "default": "not_null",
-          "title": "Type",
-          "type": "string"
-        }
-      },
-      "required": [
-        "columns"
-      ],
-      "title": "DQCheckNotNull",
-      "type": "object"
-    },
-    "DQCheckRange": {
-      "additionalProperties": false,
-      "description": "Value range check configuration.",
-      "properties": {
-        "column": {
-          "description": "Column to check for value range",
-          "title": "Column",
-          "type": "string"
-        },
-        "max_value": {
-          "anyOf": [
-            {
-              "type": "number"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "description": "Maximum allowed value (inclusive)",
-          "title": "Max Value"
-        },
-        "min_value": {
-          "anyOf": [
-            {
-              "type": "number"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "description": "Minimum allowed value (inclusive)",
-          "title": "Min Value"
-        },
-        "severity": {
-          "$ref": "#/$defs/DQSeverity",
-          "default": "error",
-          "description": "Severity level if check fails"
-        },
-        "type": {
-          "const": "range",
-          "default": "range",
-          "title": "Type",
-          "type": "string"
-        }
-      },
-      "required": [
-        "column"
-      ],
-      "title": "DQCheckRange",
-      "type": "object"
-    },
-    "DQCheckRegex": {
-      "additionalProperties": false,
-      "description": "Regex pattern check configuration.",
-      "properties": {
-        "column": {
-          "description": "Column to validate against pattern",
-          "title": "Column",
-          "type": "string"
-        },
-        "pattern": {
-          "description": "Regular expression pattern",
-          "title": "Pattern",
-          "type": "string"
-        },
-        "severity": {
-          "$ref": "#/$defs/DQSeverity",
-          "default": "warning",
-          "description": "Severity level if check fails"
-        },
-        "type": {
-          "const": "regex",
-          "default": "regex",
-          "title": "Type",
-          "type": "string"
-        }
-      },
-      "required": [
-        "column",
-        "pattern"
-      ],
-      "title": "DQCheckRegex",
-      "type": "object"
-    },
-    "DQCheckUnique": {
-      "additionalProperties": false,
-      "description": "Uniqueness check configuration.",
-      "properties": {
-        "columns": {
-          "description": "Columns to check for uniqueness (compound key if multiple)",
-          "items": {
-            "type": "string"
-          },
-          "minItems": 1,
-          "title": "Columns",
-          "type": "array"
-        },
-        "severity": {
-          "$ref": "#/$defs/DQSeverity",
-          "default": "error",
-          "description": "Severity level if check fails"
-        },
-        "type": {
-          "const": "unique",
-          "default": "unique",
-          "title": "Type",
-          "type": "string"
-        }
-      },
-      "required": [
-        "columns"
-      ],
-      "title": "DQCheckUnique",
-      "type": "object"
-    },
-    "DQSeverity": {
-      "description": "Data quality check severity levels.",
-      "enum": [
-        "error",
-        "warning"
-      ],
-      "title": "DQSeverity",
-      "type": "string"
-    },
-    "DataQualityConfig": {
-      "additionalProperties": false,
-      "description": "Data quality configuration for a table or pipeline.",
-      "properties": {
-        "checks": {
-          "description": "List of data quality checks to run",
-          "items": {
-            "discriminator": {
-              "mapping": {
-                "custom_sql": "#/$defs/DQCheckCustomSql",
-                "freshness": "#/$defs/DQCheckFreshness",
-                "not_null": "#/$defs/DQCheckNotNull",
-                "range": "#/$defs/DQCheckRange",
-                "regex": "#/$defs/DQCheckRegex",
-                "unique": "#/$defs/DQCheckUnique"
-              },
-              "propertyName": "type"
-            },
-            "oneOf": [
-              {
-                "$ref": "#/$defs/DQCheckNotNull"
-              },
-              {
-                "$ref": "#/$defs/DQCheckUnique"
-              },
-              {
-                "$ref": "#/$defs/DQCheckRegex"
-              },
-              {
-                "$ref": "#/$defs/DQCheckRange"
-              },
-              {
-                "$ref": "#/$defs/DQCheckFreshness"
-              },
-              {
-                "$ref": "#/$defs/DQCheckCustomSql"
-              }
-            ]
-          },
-          "title": "Checks",
-          "type": "array"
-        },
-        "enabled": {
-          "default": true,
-          "description": "Enable data quality checks",
-          "title": "Enabled",
-          "type": "boolean"
-        },
-        "fail_on_error": {
-          "default": false,
-          "description": "Fail pipeline if any DQ check fails with ERROR severity",
-          "title": "Fail On Error",
-          "type": "boolean"
-        }
-      },
-      "title": "DataQualityConfig",
-      "type": "object"
-    },
-    "DatabaseAuthType": {
-      "description": "Database authentication types.\n\n- SQL: Standard username/password authentication\n- WINDOWS_INTEGRATED: Windows Active Directory authentication (MSSQL only)",
-      "enum": [
-        "sql",
-        "windows_integrated"
-      ],
-      "title": "DatabaseAuthType",
-      "type": "string"
-    },
-    "DatabaseConnectionConfig": {
-      "additionalProperties": false,
-      "description": "Database connection configuration.\n\nSupports Oracle, MSSQL, PostgreSQL, MySQL.\nSecrets are referenced using ${secrets.xxx} pattern.\n\nMSSQL Windows Integrated Auth:\n    For local development with Windows AD authentication, set:\n    - auth_type: \"windows_integrated\"\n    - username/password can be omitted (uses current Windows session)\n    \n    Connection string pattern:\n    mssql+pyodbc://@SERVER/DATABASE?trusted_connection=yes&driver=ODBC+Driver+18+for+SQL+Server",
-      "properties": {
-        "auth_type": {
-          "$ref": "#/$defs/DatabaseAuthType",
-          "default": "sql",
-          "description": "Authentication type (sql or windows_integrated for MSSQL)"
-        },
-        "database": {
-          "anyOf": [
-            {
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "source": {
+      "$defs": {
+        "ApiKeyAuthConfig": {
+          "additionalProperties": false,
+          "description": "API Key authentication configuration.",
+          "properties": {
+            "api_key": {
+              "description": "API key value (use ${secrets.xxx} for secret reference)",
+              "title": "Api Key",
               "type": "string"
             },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "description": "Database name (for MSSQL, PostgreSQL, MySQL)",
-          "title": "Database"
-        },
-        "driver": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": "ODBC Driver 17 for SQL Server",
-          "description": "ODBC driver name for MSSQL (default: Driver 17, pre-installed on Databricks)",
-          "title": "Driver"
-        },
-        "host": {
-          "description": "Database host",
-          "minLength": 1,
-          "title": "Host",
-          "type": "string"
-        },
-        "password": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "description": "Password (use ${secrets.xxx} for secret reference). Optional for windows_integrated auth.",
-          "title": "Password"
-        },
-        "port": {
-          "description": "Database port",
-          "maximum": 65535,
-          "minimum": 1,
-          "title": "Port",
-          "type": "integer"
-        },
-        "service_name": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "description": "Oracle service name (for Oracle only)",
-          "title": "Service Name"
-        },
-        "username": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "description": "Username (use ${secrets.xxx} for secret reference). Optional for windows_integrated auth.",
-          "title": "Username"
-        }
-      },
-      "required": [
-        "host",
-        "port"
-      ],
-      "title": "DatabaseConnectionConfig",
-      "type": "object"
-    },
-    "DatabaseOptionsConfig": {
-      "additionalProperties": false,
-      "description": "Database-specific options.\n\nReference: https://dlthub.com/docs/dlt-ecosystem/verified-sources/sql_database\n\nOracle-specific notes:\n    - detect_precision_hints: Critical for Oracle NUMBER type handling\n    - defer_table_reflect: Enables lazy schema loading for performance\n    - parallelize: Enables parallel table extraction for Oracle",
-      "properties": {
-        "backend": {
-          "default": "pyarrow",
-          "description": "Backend for reading data (pyarrow recommended for nullable types)",
-          "enum": [
-            "pyarrow",
-            "pandas",
-            "connectorx"
-          ],
-          "title": "Backend",
-          "type": "string"
-        },
-        "chunk_size": {
-          "default": 10000,
-          "description": "Number of rows per chunk",
-          "maximum": 1000000,
-          "minimum": 100,
-          "title": "Chunk Size",
-          "type": "integer"
-        },
-        "defer_table_reflect": {
-          "default": true,
-          "description": "Lazy schema loading - reflects schema only when needed",
-          "title": "Defer Table Reflect",
-          "type": "boolean"
-        },
-        "detect_precision_hints": {
-          "default": true,
-          "description": "Detect precision hints for Oracle NUMBER types (critical for Oracle)",
-          "title": "Detect Precision Hints",
-          "type": "boolean"
-        },
-        "parallelize": {
-          "default": false,
-          "description": "Enable parallel extraction for database sources (useful for Oracle)",
-          "title": "Parallelize",
-          "type": "boolean"
-        },
-        "reflection_level": {
-          "default": "full",
-          "description": "Level of schema reflection",
-          "enum": [
-            "minimal",
-            "full",
-            "full_with_precision"
-          ],
-          "title": "Reflection Level",
-          "type": "string"
-        }
-      },
-      "title": "DatabaseOptionsConfig",
-      "type": "object"
-    },
-    "DatabaseSourceConfig": {
-      "additionalProperties": false,
-      "description": "Database source configuration.\n\nFile location: configs/sources/{subtype}/{source_name}.yaml",
-      "properties": {
-        "connection": {
-          "$ref": "#/$defs/DatabaseConnectionConfig",
-          "description": "Connection configuration"
-        },
-        "description": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "description": "Human-readable description",
-          "title": "Description"
-        },
-        "name": {
-          "description": "Unique source name (lowercase snake_case)",
-          "minLength": 1,
-          "pattern": "^[a-z][a-z0-9_]*$",
-          "title": "Name",
-          "type": "string"
-        },
-        "options": {
-          "$ref": "#/$defs/DatabaseOptionsConfig",
-          "description": "Database-specific options"
-        },
-        "retry": {
-          "$ref": "#/$defs/RetryConfig",
-          "description": "Retry configuration"
-        },
-        "subtype": {
-          "$ref": "#/$defs/DatabaseSubtype",
-          "description": "Database type (oracle, mssql, postgres, mysql)"
-        },
-        "tags": {
-          "$ref": "#/$defs/TagsConfig",
-          "description": "Metadata tags"
-        },
-        "type": {
-          "const": "database",
-          "default": "database",
-          "title": "Type",
-          "type": "string"
-        }
-      },
-      "required": [
-        "name",
-        "subtype",
-        "connection"
-      ],
-      "title": "DatabaseSourceConfig",
-      "type": "object"
-    },
-    "DatabaseSubtype": {
-      "description": "Supported database subtypes.",
-      "enum": [
-        "oracle",
-        "mssql",
-        "postgres",
-        "mysql"
-      ],
-      "title": "DatabaseSubtype",
-      "type": "string"
-    },
-    "DatabricksConnectionConfig": {
-      "additionalProperties": false,
-      "description": "Databricks source connection configuration for Reverse ETL.\n\nUses databricks-sql-connector via SQLAlchemy for reading Delta tables\nfrom a remote Databricks workspace.\n\nReference: https://docs.databricks.com/dev-tools/python-sql-connector.html",
-      "properties": {
-        "access_token": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "description": "Personal access token or service principal token. Use ${secrets.xxx} pattern.",
-          "title": "Access Token"
-        },
-        "catalog": {
-          "description": "Unity Catalog name to read from",
-          "examples": [
-            "hive_metastore",
-            "main",
-            "prod_catalog"
-          ],
-          "title": "Catalog",
-          "type": "string"
-        },
-        "client_id": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "description": "OAuth client ID for service principal auth. Use ${secrets.xxx}.",
-          "title": "Client Id"
-        },
-        "client_secret": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "description": "OAuth client secret for service principal auth. Use ${secrets.xxx}.",
-          "title": "Client Secret"
-        },
-        "host": {
-          "description": "Databricks workspace host (e.g., 'adb-1234567890123456.7.azuredatabricks.net')",
-          "examples": [
-            "adb-1234567890123456.7.azuredatabricks.net"
-          ],
-          "title": "Host",
-          "type": "string"
-        },
-        "http_path": {
-          "description": "HTTP path for SQL warehouse or cluster (e.g., '/sql/1.0/warehouses/abc123')",
-          "examples": [
-            "/sql/1.0/warehouses/abc123",
-            "/sql/protocolv1/o/1234567890123456/0123-456789-abc123"
-          ],
-          "title": "Http Path",
-          "type": "string"
-        },
-        "schema_name": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "description": "Default schema within catalog (optional, can specify per table)",
-          "title": "Schema Name"
-        }
-      },
-      "required": [
-        "host",
-        "http_path",
-        "catalog"
-      ],
-      "title": "DatabricksConnectionConfig",
-      "type": "object"
-    },
-    "DatabricksSourceConfig": {
-      "additionalProperties": false,
-      "description": "Databricks source configuration for Reverse ETL.\n\nFile location: configs/sources/databricks/{source_name}.yaml\n\nUse cases:\n    - Reverse ETL to Oracle (push aggregated data back to operational DB)\n    - Reverse ETL to MSSQL (sync curated data to legacy systems)\n    - Data export to external partners\n    - Push ML predictions or KPIs to transactional systems\n\nImplementation: Uses dlt's sql_database source with databricks-sql-connector.\nThe framework generates SQLAlchemy connection string for Databricks.",
-      "properties": {
-        "connection": {
-          "$ref": "#/$defs/DatabricksConnectionConfig",
-          "description": "Databricks connection configuration"
-        },
-        "description": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "description": "Human-readable description (e.g., 'Production workspace sync')",
-          "title": "Description"
-        },
-        "name": {
-          "description": "Unique source name (lowercase snake_case)",
-          "minLength": 1,
-          "pattern": "^[a-z][a-z0-9_]*$",
-          "title": "Name",
-          "type": "string"
-        },
-        "options": {
-          "$ref": "#/$defs/DatabaseOptionsConfig",
-          "description": "Database options (backend, reflection_level, etc.)"
-        },
-        "retry": {
-          "$ref": "#/$defs/RetryConfig",
-          "description": "Retry configuration"
-        },
-        "tags": {
-          "$ref": "#/$defs/TagsConfig",
-          "description": "Metadata tags"
-        },
-        "type": {
-          "const": "databricks",
-          "default": "databricks",
-          "title": "Type",
-          "type": "string"
-        }
-      },
-      "required": [
-        "name",
-        "connection"
-      ],
-      "title": "DatabricksSourceConfig",
-      "type": "object"
-    },
-    "DateGranularity": {
-      "description": "Date granularity for folder partitioning.\n\nBased on GRM Germany FileRepositoryDateGranularity pattern.",
-      "enum": [
-        "year",
-        "year_month",
-        "day",
-        "hour"
-      ],
-      "title": "DateGranularity",
-      "type": "string"
-    },
-    "FileCompression": {
-      "description": "Supported compression types for file output.",
-      "enum": [
-        "snappy",
-        "gzip",
-        "lz4",
-        "zstd",
-        "none"
-      ],
-      "title": "FileCompression",
-      "type": "string"
-    },
-    "FileFormat": {
-      "description": "Supported file formats for filesystem source/destination.\n\ndlt NATIVE READERS:\n    - CSV:     read_csv() via pandas, or read_csv_duckdb() for better performance\n    - PARQUET: read_parquet() via pyarrow\n    - JSONL:   read_jsonl() - line-delimited JSON\n\nFRAMEWORK-PROVIDED TRANSFORMERS:\n    - JSON:  Single JSON files - framework provides read_json() transformer\n\nREQUIRES CUSTOM TRANSFORMERS (contact central team):\n    - AVRO:  Apache Avro format (requires fastavro)\n    - XLSX:  Excel files (requires openpyxl)\n\nPERFORMANCE NOTES:\n    - Use read_csv_duckdb() instead of read_csv() for better CSV performance\n    - Set use_pyarrow=True for Parquet/CSV to enable zero-copy Arrow format\n    - Increase chunk_size for large files (10,000+ recommended for production)",
-      "enum": [
-        "parquet",
-        "csv",
-        "jsonl",
-        "json",
-        "avro"
-      ],
-      "title": "FileFormat",
-      "type": "string"
-    },
-    "FilesystemConnectionConfig": {
-      "additionalProperties": false,
-      "description": "Filesystem connection configuration.\n\nSupports multiple protocols: local, Azure ADLS, S3, GCS, SFTP.",
-      "properties": {
-        "account_name": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "description": "Storage account name (Azure) or access key ID (AWS)",
-          "title": "Account Name"
-        },
-        "bucket": {
-          "description": "Container/bucket name (e.g., 'databridge-landing')",
-          "title": "Bucket",
-          "type": "string"
-        },
-        "credentials": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "description": "Credentials reference (e.g., '${secrets.azure_storage_sas}')",
-          "title": "Credentials"
-        },
-        "host": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "description": "SFTP host (required for sftp protocol)",
-          "title": "Host"
-        },
-        "port": {
-          "anyOf": [
-            {
-              "type": "integer"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "description": "SFTP port (default: 22)",
-          "title": "Port"
-        },
-        "protocol": {
-          "$ref": "#/$defs/FilesystemProtocol",
-          "default": "az",
-          "description": "Filesystem protocol (az, s3, gs, file, sftp)"
-        },
-        "username": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "description": "SFTP username",
-          "title": "Username"
-        }
-      },
-      "required": [
-        "bucket"
-      ],
-      "title": "FilesystemConnectionConfig",
-      "type": "object"
-    },
-    "FilesystemFileOptionsConfig": {
-      "additionalProperties": false,
-      "description": "File format, compression, and performance options for filesystem operations.\n\nNote: file_glob moved to FilesystemPathConfig for source reading.\nThis class handles format, compression, performance tuning, and output file naming.\n\nPERFORMANCE TUNING:\n    - chunk_size: Number of rows/records per batch. Larger = faster but more memory.\n    - use_pyarrow: Enable zero-copy Arrow format for Parquet/CSV (faster for large files).\n    - use_duckdb_csv_reader: Use DuckDB instead of pandas for CSV (faster).\n\nRECOMMENDED SETTINGS BY FILE SIZE:\n    - Small files (<10MB): chunk_size=1000, defaults are fine\n    - Medium files (10-100MB): chunk_size=10000\n    - Large files (>100MB): chunk_size=50000, use_pyarrow=True",
-      "properties": {
-        "chunk_size": {
-          "default": 10000,
-          "description": "Number of rows/records to process per batch.\nLarger values = better throughput but higher memory usage.\nRecommended: 1000 (small files), 10000 (medium), 50000+ (large)",
-          "maximum": 1000000,
-          "minimum": 100,
-          "title": "Chunk Size",
-          "type": "integer"
-        },
-        "compression": {
-          "$ref": "#/$defs/FileCompression",
-          "default": "snappy",
-          "description": "Compression type (snappy, gzip, lz4, zstd, none)"
-        },
-        "file_name_pattern": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "description": "Pattern for output file names (destination only).\nVariables: {table_name}, {timestamp}, {load_id}, {year}, {month}, {day}\nExample: '{table_name}_{timestamp}.parquet'",
-          "title": "File Name Pattern"
-        },
-        "format": {
-          "$ref": "#/$defs/FileFormat",
-          "default": "parquet",
-          "description": "File format (parquet, avro, json, jsonl, csv)"
-        },
-        "max_file_size_mb": {
-          "anyOf": [
-            {
-              "maximum": 1024,
-              "minimum": 1,
-              "type": "integer"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "description": "Maximum output file size in MB before splitting",
-          "title": "Max File Size Mb"
-        },
-        "use_duckdb_csv_reader": {
-          "default": true,
-          "description": "Use DuckDB reader for CSV files instead of pandas.\nDuckDB is typically faster and handles compression better.\nSet to False only if you need specific pandas CSV options.",
-          "title": "Use Duckdb Csv Reader",
-          "type": "boolean"
-        },
-        "use_pyarrow": {
-          "default": false,
-          "description": "Use PyArrow RecordBatch format instead of Python dicts.\nEnables zero-copy operations for better performance with large files.\nOnly effective for Parquet and CSV (with DuckDB reader).\nSet to True when loading large files (>100MB) to Databricks.",
-          "title": "Use Pyarrow",
-          "type": "boolean"
-        }
-      },
-      "title": "FilesystemFileOptionsConfig",
-      "type": "object"
-    },
-    "FilesystemIncrementalConfig": {
-      "additionalProperties": false,
-      "description": "Incremental scanning configuration for filesystem sources.\n\nMaps to dlt's native incremental loading capabilities:\n\n| track_by       | dlt Mapping                                  | Use Case                          |\n|----------------|----------------------------------------------|-----------------------------------|\n| file_modified  | dlt.sources.incremental(\"modification_date\") | Files touched when new data added |\n| file_name      | dlt.sources.incremental(\"file_name\")         | Alphabetical file name ordering   |\n| file_url       | dlt.sources.incremental(\"file_url\")          | Full path ordering (see below)    |\n| folder_date    | Framework parses date from folder path       | GRM-style partitioned folders     |\n\nFILE_URL INCREMENTAL EXPLAINED:\n\nfile_url is the FULL PATH to each file and is dlt's PRIMARY KEY for files.\nSince paths sort lexicographically, date-partitioned paths sort chronologically:\n\n    az://container/data/2024/01/28/orders.parquet  (earlier)\n    az://container/data/2024/01/29/orders.parquet  (later)\n    az://container/data/2024/01/30/orders.parquet  (latest)\n\nUsing file_url incremental with initial_value=\"2024/01/28/\":\n    - dlt will only return files with file_url >= initial_value\n    - After first run, state stores the max file_url processed\n    - Next run only processes files > last processed file_url\n\nThis is ideal for date-partitioned folders where folder names ARE the dates.\n\nFOLDER_DATE vs FILE_URL:\n    - folder_date: Framework parses \"{year}/{month}/{day}\" pattern into date\n    - file_url: Uses raw path string comparison (simpler, more flexible)\n    \nFor most date-partitioned sources, folder_date is preferred because it\nexplicitly understands the date semantics. Use file_url when you need\nraw path-based ordering without date parsing.",
-      "properties": {
-        "enabled": {
-          "default": true,
-          "description": "Enable incremental file scanning",
-          "title": "Enabled",
-          "type": "boolean"
-        },
-        "initial_value": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "description": "Initial value for first run. Format depends on track_by:\n- file_modified: ISO datetime '2024-01-01T00:00:00Z'\n- file_name: File name prefix 'data_2024'\n- file_url: Path prefix '2024/01/01/' (matches folder_pattern)\n- folder_date: Folder path '2024/01/01' (matches folder_pattern format)",
-          "title": "Initial Value"
-        },
-        "row_order": {
-          "anyOf": [
-            {
+            "location": {
+              "default": "query",
+              "description": "Where to send the API key",
               "enum": [
-                "asc",
-                "desc"
+                "query",
+                "header"
               ],
+              "title": "Location",
               "type": "string"
             },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "description": "Sort order for file processing (dlt native support):\n- asc: Process oldest files first (default for most cases)\n- desc: Process newest files first",
-          "title": "Row Order"
-        },
-        "track_by": {
-          "default": "file_modified",
-          "description": "How to track incremental state:\n- file_modified: Track by file modification timestamp (dlt native)\n- file_name: Track by file name ordering (dlt native)\n- file_url: Track by full file path/URL (dlt native)\n- folder_date: Parse date from folder path pattern (framework enhanced)",
-          "enum": [
-            "file_modified",
-            "file_name",
-            "file_url",
-            "folder_date"
-          ],
-          "title": "Track By",
-          "type": "string"
-        }
-      },
-      "title": "FilesystemIncrementalConfig",
-      "type": "object"
-    },
-    "FilesystemPathConfig": {
-      "additionalProperties": false,
-      "description": "Filesystem path configuration with flexible partitioning support.\n\nSupports TWO patterns:\n\n1. MULTI-FOLDER PARTITIONED (GRM Germany style):\n   Base: file-repository/Trading/Oracle\n   Folders: {year}/{month}/{day}/ or year={year}/month={month}/day={day}/\n   Files: *.parquet\n   Result: file-repository/Trading/Oracle/2024/01/28/*.parquet\n\n2. SINGLE-FOLDER with date-in-filename:\n   Base: landing-zone/partner-feed\n   Folders: null (no folder partitioning)\n   Files: data_{year}{month}{day}*.csv\n   Result: landing-zone/partner-feed/data_20240128*.csv\n\nMULTI-LEVEL FOLDER STRUCTURES:\n   The base_path handles any static folder hierarchy BEFORE date folders:\n   \n   Example 1: germany/hr/advisor/2026/01/01/\n     base_path: \"germany/hr/advisor\"\n     folder_pattern: \"{year}/{month}/{day}/\"\n   \n   Example 2: uk/2026/01/01/\n     base_path: \"uk\"\n     folder_pattern: \"{year}/{month}/{day}/\"\n   \n   Example 3: data/region=emea/country=de/2026/01/01/\n     base_path: \"data/region=emea/country=de\"\n     folder_pattern: \"{year}/{month}/{day}/\"\n\nPath pattern variables:\n    - {year}, {month}, {day}, {hour}: Date components\n    - {source_name}, {table_name}: Runtime substitution\n    - {timestamp}, {load_id}: Load-time values",
-      "properties": {
-        "base_path": {
-          "description": "Base path within bucket (e.g., 'file-repository/Trading/Oracle')",
-          "title": "Base Path",
-          "type": "string"
-        },
-        "date_granularity": {
-          "$ref": "#/$defs/DateGranularity",
-          "default": "day",
-          "description": "Date granularity for folder partitioning or filename date extraction"
-        },
-        "file_glob": {
-          "default": "*",
-          "description": "Glob pattern for matching files. Supports date variables for single-folder pattern.\nExamples: '*.parquet', 'data_{year}{month}{day}*.csv', '**/*.json'",
-          "title": "File Glob",
-          "type": "string"
-        },
-        "folder_pattern": {
-          "anyOf": [
-            {
+            "name": {
+              "description": "Name of the API key parameter",
+              "title": "Name",
               "type": "string"
             },
-            {
-              "type": "null"
-            }
-          ],
-          "default": "{year}/{month}/{day}/",
-          "description": "Folder partition pattern with date variables. Set to null for single-folder sources where date is in filename.\nExamples: '{year}/{month}/{day}/', 'year={year}/month={month}/day={day}/' (Hive-style)",
-          "title": "Folder Pattern"
-        },
-        "partition_style": {
-          "$ref": "#/$defs/PartitionStyle",
-          "default": "numeric",
-          "description": "Partition folder naming style (numeric or hive_style)"
-        }
-      },
-      "required": [
-        "base_path"
-      ],
-      "title": "FilesystemPathConfig",
-      "type": "object"
-    },
-    "FilesystemProtocol": {
-      "description": "Supported filesystem protocols.",
-      "enum": [
-        "file",
-        "az",
-        "s3",
-        "gs",
-        "sftp"
-      ],
-      "title": "FilesystemProtocol",
-      "type": "string"
-    },
-    "FilesystemSourceConfig": {
-      "additionalProperties": false,
-      "description": "Filesystem source configuration for reading from partitioned folders.\n\nFile location: configs/sources/filesystem/{source_name}.yaml\n\nUse cases:\n    - Partner file drops (SFTP \u2192 ADLS \u2192 Databricks)\n    - External data feeds with date-partitioned folders\n    - Historical file migrations",
-      "properties": {
-        "connection": {
-          "$ref": "#/$defs/FilesystemConnectionConfig",
-          "description": "Filesystem connection configuration"
-        },
-        "description": {
-          "anyOf": [
-            {
+            "type": {
+              "const": "api_key",
+              "default": "api_key",
+              "title": "Type",
               "type": "string"
-            },
-            {
-              "type": "null"
             }
-          ],
-          "default": null,
-          "description": "Human-readable description",
-          "title": "Description"
-        },
-        "file_options": {
-          "$ref": "#/$defs/FilesystemFileOptionsConfig",
-          "description": "File format options"
-        },
-        "incremental": {
-          "$ref": "#/$defs/FilesystemIncrementalConfig",
-          "description": "Incremental scanning configuration"
-        },
-        "name": {
-          "description": "Unique source name (lowercase snake_case)",
-          "minLength": 1,
-          "pattern": "^[a-z][a-z0-9_]*$",
-          "title": "Name",
-          "type": "string"
-        },
-        "path": {
-          "$ref": "#/$defs/FilesystemPathConfig",
-          "description": "Path and partitioning configuration"
-        },
-        "retry": {
-          "$ref": "#/$defs/RetryConfig",
-          "description": "Retry configuration"
-        },
-        "tags": {
-          "$ref": "#/$defs/TagsConfig",
-          "description": "Metadata tags"
-        },
-        "type": {
-          "const": "filesystem",
-          "default": "filesystem",
-          "title": "Type",
-          "type": "string"
-        }
-      },
-      "required": [
-        "name",
-        "connection",
-        "path"
-      ],
-      "title": "FilesystemSourceConfig",
-      "type": "object"
-    },
-    "HeaderLinkPaginatorConfig": {
-      "additionalProperties": false,
-      "description": "Paginator for APIs where next page URL is in response headers.",
-      "properties": {
-        "links_next_key": {
-          "default": "next",
-          "description": "Relation key in Link header for next page",
-          "title": "Links Next Key",
-          "type": "string"
-        },
-        "type": {
-          "const": "header_link",
-          "default": "header_link",
-          "title": "Type",
-          "type": "string"
-        }
-      },
-      "title": "HeaderLinkPaginatorConfig",
-      "type": "object"
-    },
-    "IncrementalConfig": {
-      "additionalProperties": false,
-      "description": "Incremental loading configuration.\n\nReference: https://dlthub.com/docs/general-usage/incremental-loading",
-      "properties": {
-        "cursor_path": {
-          "description": "Path to cursor field in response/row (REQUIRED)",
-          "title": "Cursor Path",
-          "type": "string"
-        },
-        "end_param": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "description": "Query parameter name for end value (optional)",
-          "title": "End Param"
-        },
-        "end_value": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "description": "End value (optional, for bounded extractions)",
-          "title": "End Value"
-        },
-        "initial_value": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "description": "Initial value for first run (e.g., '2024-01-01T00:00:00Z')",
-          "title": "Initial Value"
-        },
-        "start_param": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "description": "Query parameter name for start value (optional for REST APIs)",
-          "title": "Start Param"
-        }
-      },
-      "required": [
-        "cursor_path"
-      ],
-      "title": "IncrementalConfig",
-      "type": "object"
-    },
-    "JsonLinkPaginatorConfig": {
-      "additionalProperties": false,
-      "description": "Paginator for APIs where next page URL is in JSON response body.",
-      "properties": {
-        "next_url_path": {
-          "default": "next",
-          "description": "JSONPath to next page URL in response",
-          "title": "Next Url Path",
-          "type": "string"
-        },
-        "type": {
-          "const": "json_link",
-          "default": "json_link",
-          "title": "Type",
-          "type": "string"
-        }
-      },
-      "title": "JsonLinkPaginatorConfig",
-      "type": "object"
-    },
-    "OAuth2AuthConfig": {
-      "additionalProperties": false,
-      "description": "OAuth2 authentication configuration.",
-      "properties": {
-        "client_id": {
-          "description": "OAuth2 client ID (use ${secrets.xxx} for secret reference)",
-          "title": "Client Id",
-          "type": "string"
-        },
-        "client_secret": {
-          "description": "OAuth2 client secret (use ${secrets.xxx} for secret reference)",
-          "title": "Client Secret",
-          "type": "string"
-        },
-        "scopes": {
-          "description": "OAuth2 scopes to request",
-          "items": {
-            "type": "string"
           },
-          "title": "Scopes",
-          "type": "array"
-        },
-        "token_url": {
-          "description": "OAuth2 token endpoint URL",
-          "title": "Token Url",
-          "type": "string"
-        },
-        "type": {
-          "const": "oauth2",
-          "default": "oauth2",
-          "title": "Type",
-          "type": "string"
-        }
-      },
-      "required": [
-        "token_url",
-        "client_id",
-        "client_secret"
-      ],
-      "title": "OAuth2AuthConfig",
-      "type": "object"
-    },
-    "OffsetPaginatorConfig": {
-      "additionalProperties": false,
-      "description": "Offset-based pagination configuration.",
-      "properties": {
-        "limit": {
-          "description": "Number of items per page",
-          "minimum": 1,
-          "title": "Limit",
-          "type": "integer"
-        },
-        "limit_param": {
-          "default": "limit",
-          "description": "Query parameter name for limit",
-          "title": "Limit Param",
-          "type": "string"
-        },
-        "maximum_offset": {
-          "anyOf": [
-            {
-              "type": "integer"
-            },
-            {
-              "type": "null"
-            }
+          "required": [
+            "name",
+            "api_key"
           ],
-          "default": null,
-          "description": "Maximum offset to reach (optional cap)",
-          "title": "Maximum Offset"
-        },
-        "offset_param": {
-          "default": "offset",
-          "description": "Query parameter name for offset",
-          "title": "Offset Param",
-          "type": "string"
-        },
-        "stop_after_empty_page": {
-          "default": true,
-          "description": "Stop when empty page is encountered",
-          "title": "Stop After Empty Page",
-          "type": "boolean"
-        },
-        "total_path": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": "total",
-          "description": "JSONPath to total count in response (None if not available)",
-          "title": "Total Path"
-        },
-        "type": {
-          "const": "offset",
-          "default": "offset",
-          "title": "Type",
-          "type": "string"
-        }
-      },
-      "required": [
-        "limit"
-      ],
-      "title": "OffsetPaginatorConfig",
-      "type": "object"
-    },
-    "PageNumberPaginatorConfig": {
-      "additionalProperties": false,
-      "description": "Page number-based pagination configuration.",
-      "properties": {
-        "base_page": {
-          "default": 1,
-          "description": "Starting page number (0 or 1 depending on API)",
-          "minimum": 0,
-          "title": "Base Page",
-          "type": "integer"
-        },
-        "maximum_page": {
-          "anyOf": [
-            {
-              "type": "integer"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "description": "Maximum page number to request",
-          "title": "Maximum Page"
-        },
-        "page_param": {
-          "default": "page",
-          "description": "Query parameter name for page number",
-          "title": "Page Param",
-          "type": "string"
-        },
-        "stop_after_empty_page": {
-          "default": true,
-          "description": "Stop when empty page is encountered",
-          "title": "Stop After Empty Page",
-          "type": "boolean"
-        },
-        "total_path": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": "total_pages",
-          "description": "JSONPath to total pages in response",
-          "title": "Total Path"
-        },
-        "type": {
-          "const": "page_number",
-          "default": "page_number",
-          "title": "Type",
-          "type": "string"
-        }
-      },
-      "title": "PageNumberPaginatorConfig",
-      "type": "object"
-    },
-    "PartitionStyle": {
-      "description": "Folder partition naming style.",
-      "enum": [
-        "numeric",
-        "hive_style"
-      ],
-      "title": "PartitionStyle",
-      "type": "string"
-    },
-    "RateLimitConfig": {
-      "additionalProperties": false,
-      "description": "Rate limiting configuration for REST APIs.",
-      "properties": {
-        "requests_per_second": {
-          "default": 10.0,
-          "description": "Maximum requests per second",
-          "maximum": 1000.0,
-          "minimum": 0.1,
-          "title": "Requests Per Second",
-          "type": "number"
-        }
-      },
-      "title": "RateLimitConfig",
-      "type": "object"
-    },
-    "RestApiConnectionConfig": {
-      "additionalProperties": false,
-      "description": "REST API connection configuration.",
-      "properties": {
-        "auth": {
-          "anyOf": [
-            {
-              "discriminator": {
-                "mapping": {
-                  "api_key": "#/$defs/ApiKeyAuthConfig",
-                  "basic": "#/$defs/BasicAuthConfig",
-                  "bearer_token": "#/$defs/BearerTokenAuthConfig",
-                  "oauth2": "#/$defs/OAuth2AuthConfig"
-                },
-                "propertyName": "type"
-              },
-              "oneOf": [
-                {
-                  "$ref": "#/$defs/ApiKeyAuthConfig"
-                },
-                {
-                  "$ref": "#/$defs/BearerTokenAuthConfig"
-                },
-                {
-                  "$ref": "#/$defs/BasicAuthConfig"
-                },
-                {
-                  "$ref": "#/$defs/OAuth2AuthConfig"
-                }
-              ]
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "description": "Authentication configuration",
-          "title": "Auth"
-        },
-        "base_url": {
-          "description": "API base URL (must start with http:// or https://)",
-          "pattern": "^https?://",
-          "title": "Base Url",
-          "type": "string"
-        },
-        "headers": {
-          "additionalProperties": {
-            "type": "string"
-          },
-          "description": "Default headers for all requests",
-          "title": "Headers",
+          "title": "ApiKeyAuthConfig",
           "type": "object"
         },
-        "rate_limit": {
-          "anyOf": [
-            {
-              "$ref": "#/$defs/RateLimitConfig"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "description": "Rate limiting configuration"
-        }
-      },
-      "required": [
-        "base_url"
-      ],
-      "title": "RestApiConnectionConfig",
-      "type": "object"
-    },
-    "RestApiResourceConfig": {
-      "additionalProperties": false,
-      "description": "Configuration for a single REST API endpoint.",
-      "properties": {
-        "data_quality": {
-          "anyOf": [
-            {
-              "$ref": "#/$defs/DataQualityConfig"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "description": "Resource-level data quality checks"
-        },
-        "data_selector": {
-          "anyOf": [
-            {
+        "BasicAuthConfig": {
+          "additionalProperties": false,
+          "description": "Basic authentication configuration.",
+          "properties": {
+            "password": {
+              "description": "Password (use ${secrets.xxx} for secret reference)",
+              "title": "Password",
               "type": "string"
             },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "description": "JSONPath to data array in response (e.g., 'data.items')",
-          "title": "Data Selector"
-        },
-        "endpoint": {
-          "description": "API endpoint path (e.g., '/users' or '/orgs/{org}/repos')",
-          "title": "Endpoint",
-          "type": "string"
-        },
-        "incremental": {
-          "anyOf": [
-            {
-              "$ref": "#/$defs/IncrementalConfig"
+            "type": {
+              "const": "basic",
+              "default": "basic",
+              "title": "Type",
+              "type": "string"
             },
-            {
-              "type": "null"
+            "username": {
+              "description": "Username (use ${secrets.xxx} for secret reference)",
+              "title": "Username",
+              "type": "string"
             }
+          },
+          "required": [
+            "username",
+            "password"
           ],
-          "default": null,
-          "description": "Incremental loading configuration"
-        },
-        "method": {
-          "default": "GET",
-          "description": "HTTP method",
-          "enum": [
-            "GET",
-            "POST"
-          ],
-          "title": "Method",
-          "type": "string"
-        },
-        "name": {
-          "description": "Resource name (becomes table name)",
-          "minLength": 1,
-          "title": "Name",
-          "type": "string"
-        },
-        "pagination": {
-          "anyOf": [
-            {
-              "discriminator": {
-                "mapping": {
-                  "cursor": "#/$defs/CursorPaginatorConfig",
-                  "header_link": "#/$defs/HeaderLinkPaginatorConfig",
-                  "json_link": "#/$defs/JsonLinkPaginatorConfig",
-                  "offset": "#/$defs/OffsetPaginatorConfig",
-                  "page_number": "#/$defs/PageNumberPaginatorConfig",
-                  "single_page": "#/$defs/SinglePagePaginatorConfig"
-                },
-                "propertyName": "type"
-              },
-              "oneOf": [
-                {
-                  "$ref": "#/$defs/JsonLinkPaginatorConfig"
-                },
-                {
-                  "$ref": "#/$defs/HeaderLinkPaginatorConfig"
-                },
-                {
-                  "$ref": "#/$defs/OffsetPaginatorConfig"
-                },
-                {
-                  "$ref": "#/$defs/PageNumberPaginatorConfig"
-                },
-                {
-                  "$ref": "#/$defs/CursorPaginatorConfig"
-                },
-                {
-                  "$ref": "#/$defs/SinglePagePaginatorConfig"
-                }
-              ]
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "description": "Pagination configuration (overrides client default)",
-          "title": "Pagination"
-        },
-        "parallelized": {
-          "default": true,
-          "description": "Enable parallel extraction for this resource. When True, this resource can run concurrently with other parallelized resources in the same source (requires extract_workers > 1).",
-          "title": "Parallelized",
-          "type": "boolean"
-        },
-        "params": {
-          "additionalProperties": true,
-          "description": "Query parameters",
-          "title": "Params",
+          "title": "BasicAuthConfig",
           "type": "object"
         },
-        "primary_key": {
-          "anyOf": [
-            {
+        "BearerTokenAuthConfig": {
+          "additionalProperties": false,
+          "description": "Bearer token authentication configuration.",
+          "properties": {
+            "token": {
+              "description": "Bearer token (use ${secrets.xxx} for secret reference)",
+              "title": "Token",
+              "type": "string"
+            },
+            "type": {
+              "const": "bearer_token",
+              "default": "bearer_token",
+              "title": "Type",
+              "type": "string"
+            }
+          },
+          "required": [
+            "token"
+          ],
+          "title": "BearerTokenAuthConfig",
+          "type": "object"
+        },
+        "CursorPaginatorConfig": {
+          "additionalProperties": false,
+          "description": "Cursor-based pagination configuration.",
+          "properties": {
+            "cursor_param": {
+              "default": "after",
+              "description": "Query parameter name for cursor",
+              "title": "Cursor Param",
+              "type": "string"
+            },
+            "cursor_path": {
+              "default": "cursors.next",
+              "description": "JSONPath to cursor value in response",
+              "title": "Cursor Path",
+              "type": "string"
+            },
+            "type": {
+              "const": "cursor",
+              "default": "cursor",
+              "title": "Type",
+              "type": "string"
+            }
+          },
+          "title": "CursorPaginatorConfig",
+          "type": "object"
+        },
+        "DQCheckCustomSql": {
+          "additionalProperties": false,
+          "description": "Custom SQL check configuration.",
+          "properties": {
+            "max_failures": {
+              "default": 0,
+              "description": "Maximum allowed failures (0 = no failures allowed)",
+              "minimum": 0,
+              "title": "Max Failures",
+              "type": "integer"
+            },
+            "query": {
+              "description": "SQL query returning failure count (use {table} placeholder)",
+              "title": "Query",
+              "type": "string"
+            },
+            "severity": {
+              "$ref": "#/$defs/DQSeverity",
+              "default": "error",
+              "description": "Severity level if check fails"
+            },
+            "type": {
+              "const": "custom_sql",
+              "default": "custom_sql",
+              "title": "Type",
+              "type": "string"
+            }
+          },
+          "required": [
+            "query"
+          ],
+          "title": "DQCheckCustomSql",
+          "type": "object"
+        },
+        "DQCheckFreshness": {
+          "additionalProperties": false,
+          "description": "Data freshness check configuration.",
+          "properties": {
+            "column": {
+              "description": "Timestamp column to check for freshness",
+              "title": "Column",
+              "type": "string"
+            },
+            "max_age_hours": {
+              "description": "Maximum allowed age in hours",
+              "minimum": 1,
+              "title": "Max Age Hours",
+              "type": "integer"
+            },
+            "severity": {
+              "$ref": "#/$defs/DQSeverity",
+              "default": "error",
+              "description": "Severity level if check fails"
+            },
+            "type": {
+              "const": "freshness",
+              "default": "freshness",
+              "title": "Type",
+              "type": "string"
+            }
+          },
+          "required": [
+            "column",
+            "max_age_hours"
+          ],
+          "title": "DQCheckFreshness",
+          "type": "object"
+        },
+        "DQCheckNotNull": {
+          "additionalProperties": false,
+          "description": "Not null check configuration.",
+          "properties": {
+            "columns": {
+              "description": "Columns to check for null values",
               "items": {
                 "type": "string"
               },
+              "minItems": 1,
+              "title": "Columns",
               "type": "array"
             },
-            {
+            "severity": {
+              "$ref": "#/$defs/DQSeverity",
+              "default": "error",
+              "description": "Severity level if check fails"
+            },
+            "type": {
+              "const": "not_null",
+              "default": "not_null",
+              "title": "Type",
               "type": "string"
-            },
-            {
-              "type": "null"
             }
+          },
+          "required": [
+            "columns"
           ],
-          "default": null,
-          "description": "Primary key column(s). Set explicitly if needed for merge operations.",
-          "title": "Primary Key"
-        },
-        "write_disposition": {
-          "$ref": "#/$defs/WriteDisposition",
-          "default": "merge",
-          "description": "How to write data to destination"
-        }
-      },
-      "required": [
-        "name",
-        "endpoint"
-      ],
-      "title": "RestApiResourceConfig",
-      "type": "object"
-    },
-    "RestApiResourceDefaultsConfig": {
-      "additionalProperties": false,
-      "description": "Shared defaults for all REST API resources.\n\nUse this to avoid repeating common settings across 50+ endpoints.\nIndividual resource configs can override any of these defaults.\n\nExample YAML:\n    resource_defaults:\n      primary_key: \"id\"\n      write_disposition: \"merge\"\n      params:\n        per_page: 100\n      pagination:\n        type: \"header_link\"\n        links_next_key: \"next\"",
-      "properties": {
-        "data_selector": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "description": "Default JSONPath to data array in response",
-          "title": "Data Selector"
-        },
-        "pagination": {
-          "anyOf": [
-            {
-              "discriminator": {
-                "mapping": {
-                  "cursor": "#/$defs/CursorPaginatorConfig",
-                  "header_link": "#/$defs/HeaderLinkPaginatorConfig",
-                  "json_link": "#/$defs/JsonLinkPaginatorConfig",
-                  "offset": "#/$defs/OffsetPaginatorConfig",
-                  "page_number": "#/$defs/PageNumberPaginatorConfig",
-                  "single_page": "#/$defs/SinglePagePaginatorConfig"
-                },
-                "propertyName": "type"
-              },
-              "oneOf": [
-                {
-                  "$ref": "#/$defs/JsonLinkPaginatorConfig"
-                },
-                {
-                  "$ref": "#/$defs/HeaderLinkPaginatorConfig"
-                },
-                {
-                  "$ref": "#/$defs/OffsetPaginatorConfig"
-                },
-                {
-                  "$ref": "#/$defs/PageNumberPaginatorConfig"
-                },
-                {
-                  "$ref": "#/$defs/CursorPaginatorConfig"
-                },
-                {
-                  "$ref": "#/$defs/SinglePagePaginatorConfig"
-                }
-              ]
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "description": "Default pagination for all endpoints",
-          "title": "Pagination"
-        },
-        "params": {
-          "additionalProperties": true,
-          "description": "Default query parameters for all endpoints",
-          "title": "Params",
+          "title": "DQCheckNotNull",
           "type": "object"
         },
-        "primary_key": {
-          "anyOf": [
-            {
+        "DQCheckRange": {
+          "additionalProperties": false,
+          "description": "Value range check configuration.",
+          "properties": {
+            "column": {
+              "description": "Column to check for value range",
+              "title": "Column",
+              "type": "string"
+            },
+            "max_value": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Maximum allowed value (inclusive)",
+              "title": "Max Value"
+            },
+            "min_value": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Minimum allowed value (inclusive)",
+              "title": "Min Value"
+            },
+            "severity": {
+              "$ref": "#/$defs/DQSeverity",
+              "default": "error",
+              "description": "Severity level if check fails"
+            },
+            "type": {
+              "const": "range",
+              "default": "range",
+              "title": "Type",
+              "type": "string"
+            }
+          },
+          "required": [
+            "column"
+          ],
+          "title": "DQCheckRange",
+          "type": "object"
+        },
+        "DQCheckRegex": {
+          "additionalProperties": false,
+          "description": "Regex pattern check configuration.",
+          "properties": {
+            "column": {
+              "description": "Column to validate against pattern",
+              "title": "Column",
+              "type": "string"
+            },
+            "pattern": {
+              "description": "Regular expression pattern",
+              "title": "Pattern",
+              "type": "string"
+            },
+            "severity": {
+              "$ref": "#/$defs/DQSeverity",
+              "default": "warning",
+              "description": "Severity level if check fails"
+            },
+            "type": {
+              "const": "regex",
+              "default": "regex",
+              "title": "Type",
+              "type": "string"
+            }
+          },
+          "required": [
+            "column",
+            "pattern"
+          ],
+          "title": "DQCheckRegex",
+          "type": "object"
+        },
+        "DQCheckUnique": {
+          "additionalProperties": false,
+          "description": "Uniqueness check configuration.",
+          "properties": {
+            "columns": {
+              "description": "Columns to check for uniqueness (compound key if multiple)",
               "items": {
                 "type": "string"
               },
+              "minItems": 1,
+              "title": "Columns",
               "type": "array"
             },
-            {
-              "type": "string"
+            "severity": {
+              "$ref": "#/$defs/DQSeverity",
+              "default": "error",
+              "description": "Severity level if check fails"
             },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "description": "Default primary key for all resources. Set explicitly if needed.",
-          "title": "Primary Key"
-        },
-        "write_disposition": {
-          "$ref": "#/$defs/WriteDisposition",
-          "default": "merge",
-          "description": "Default write disposition for all resources"
-        }
-      },
-      "title": "RestApiResourceDefaultsConfig",
-      "type": "object"
-    },
-    "RestApiSourceConfig": {
-      "additionalProperties": false,
-      "description": "REST API source configuration.\n\nFile location: configs/sources/rest_api/{source_name}.yaml\n\nFeatures:\n    - resource_defaults: Shared settings applied to all resources\n    - resources: Individual endpoint configurations\n    - Rate limiting support via connection.rate_limit",
-      "properties": {
-        "connection": {
-          "$ref": "#/$defs/RestApiConnectionConfig",
-          "description": "API connection configuration"
-        },
-        "description": {
-          "anyOf": [
-            {
+            "type": {
+              "const": "unique",
+              "default": "unique",
+              "title": "Type",
               "type": "string"
-            },
-            {
-              "type": "null"
             }
+          },
+          "required": [
+            "columns"
           ],
-          "default": null,
-          "description": "Human-readable description",
-          "title": "Description"
+          "title": "DQCheckUnique",
+          "type": "object"
         },
-        "name": {
-          "description": "Unique source name (lowercase snake_case)",
-          "minLength": 1,
-          "pattern": "^[a-z][a-z0-9_]*$",
-          "title": "Name",
+        "DQSeverity": {
+          "description": "Data quality check severity levels.",
+          "enum": [
+            "error",
+            "warning"
+          ],
+          "title": "DQSeverity",
           "type": "string"
         },
-        "resource_defaults": {
-          "anyOf": [
-            {
-              "$ref": "#/$defs/RestApiResourceDefaultsConfig"
+        "DataQualityConfig": {
+          "additionalProperties": false,
+          "description": "Data quality configuration for a table or pipeline.",
+          "properties": {
+            "checks": {
+              "description": "List of data quality checks to run",
+              "items": {
+                "discriminator": {
+                  "mapping": {
+                    "custom_sql": "#/$defs/DQCheckCustomSql",
+                    "freshness": "#/$defs/DQCheckFreshness",
+                    "not_null": "#/$defs/DQCheckNotNull",
+                    "range": "#/$defs/DQCheckRange",
+                    "regex": "#/$defs/DQCheckRegex",
+                    "unique": "#/$defs/DQCheckUnique"
+                  },
+                  "propertyName": "type"
+                },
+                "oneOf": [
+                  {
+                    "$ref": "#/$defs/DQCheckNotNull"
+                  },
+                  {
+                    "$ref": "#/$defs/DQCheckUnique"
+                  },
+                  {
+                    "$ref": "#/$defs/DQCheckRegex"
+                  },
+                  {
+                    "$ref": "#/$defs/DQCheckRange"
+                  },
+                  {
+                    "$ref": "#/$defs/DQCheckFreshness"
+                  },
+                  {
+                    "$ref": "#/$defs/DQCheckCustomSql"
+                  }
+                ]
+              },
+              "title": "Checks",
+              "type": "array"
             },
-            {
-              "type": "null"
+            "enabled": {
+              "default": true,
+              "description": "Enable data quality checks",
+              "title": "Enabled",
+              "type": "boolean"
+            },
+            "fail_on_error": {
+              "default": false,
+              "description": "Fail pipeline if any DQ check fails with ERROR severity",
+              "title": "Fail On Error",
+              "type": "boolean"
             }
-          ],
-          "default": null,
-          "description": "Default settings applied to all resources. Individual resource configs can override these values."
-        },
-        "resources": {
-          "description": "API endpoints to extract (can also be in separate resource files)",
-          "items": {
-            "$ref": "#/$defs/RestApiResourceConfig"
           },
-          "title": "Resources",
-          "type": "array"
+          "title": "DataQualityConfig",
+          "type": "object"
         },
-        "retry": {
-          "$ref": "#/$defs/RetryConfig",
-          "description": "Retry configuration"
+        "DatabaseAuthType": {
+          "description": "Database authentication types.\n\n- SQL: Standard username/password authentication\n- WINDOWS_INTEGRATED: Windows Active Directory authentication (MSSQL only)",
+          "enum": [
+            "sql",
+            "windows_integrated"
+          ],
+          "title": "DatabaseAuthType",
+          "type": "string"
         },
-        "tags": {
-          "$ref": "#/$defs/TagsConfig",
-          "description": "Metadata tags"
+        "DatabaseConnectionConfig": {
+          "additionalProperties": false,
+          "description": "Database connection configuration.\n\nSupports Oracle, MSSQL, PostgreSQL, MySQL.\nSecrets are referenced using ${secrets.xxx} pattern.\n\nMSSQL Windows Integrated Auth:\n    For local development with Windows AD authentication, set:\n    - auth_type: \"windows_integrated\"\n    - username/password can be omitted (uses current Windows session)\n    \n    Connection string pattern:\n    mssql+pyodbc://@SERVER/DATABASE?trusted_connection=yes&driver=ODBC+Driver+18+for+SQL+Server",
+          "properties": {
+            "auth_type": {
+              "$ref": "#/$defs/DatabaseAuthType",
+              "default": "sql",
+              "description": "Authentication type (sql or windows_integrated for MSSQL)"
+            },
+            "database": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Database name (for MSSQL, PostgreSQL, MySQL)",
+              "title": "Database"
+            },
+            "driver": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": "ODBC Driver 17 for SQL Server",
+              "description": "ODBC driver name for MSSQL (default: Driver 17, pre-installed on Databricks)",
+              "title": "Driver"
+            },
+            "host": {
+              "description": "Database host",
+              "minLength": 1,
+              "title": "Host",
+              "type": "string"
+            },
+            "password": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Password (use ${secrets.xxx} for secret reference). Optional for windows_integrated auth.",
+              "title": "Password"
+            },
+            "port": {
+              "description": "Database port",
+              "maximum": 65535,
+              "minimum": 1,
+              "title": "Port",
+              "type": "integer"
+            },
+            "service_name": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Oracle service name (for Oracle only)",
+              "title": "Service Name"
+            },
+            "username": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Username (use ${secrets.xxx} for secret reference). Optional for windows_integrated auth.",
+              "title": "Username"
+            }
+          },
+          "required": [
+            "host",
+            "port"
+          ],
+          "title": "DatabaseConnectionConfig",
+          "type": "object"
         },
-        "type": {
-          "const": "rest_api",
-          "default": "rest_api",
-          "title": "Type",
+        "DatabaseOptionsConfig": {
+          "additionalProperties": false,
+          "description": "Database-specific options.\n\nReference: https://dlthub.com/docs/dlt-ecosystem/verified-sources/sql_database\n\nOracle-specific notes:\n    - detect_precision_hints: Critical for Oracle NUMBER type handling\n    - defer_table_reflect: Enables lazy schema loading for performance\n    - parallelize: Enables parallel table extraction for Oracle",
+          "properties": {
+            "backend": {
+              "default": "pyarrow",
+              "description": "Backend for reading data (pyarrow recommended for nullable types)",
+              "enum": [
+                "pyarrow",
+                "pandas",
+                "connectorx"
+              ],
+              "title": "Backend",
+              "type": "string"
+            },
+            "chunk_size": {
+              "default": 10000,
+              "description": "Number of rows per chunk",
+              "maximum": 1000000,
+              "minimum": 100,
+              "title": "Chunk Size",
+              "type": "integer"
+            },
+            "defer_table_reflect": {
+              "default": true,
+              "description": "Lazy schema loading - reflects schema only when needed",
+              "title": "Defer Table Reflect",
+              "type": "boolean"
+            },
+            "detect_precision_hints": {
+              "default": true,
+              "description": "Detect precision hints for Oracle NUMBER types (critical for Oracle)",
+              "title": "Detect Precision Hints",
+              "type": "boolean"
+            },
+            "parallelize": {
+              "default": false,
+              "description": "Enable parallel extraction for database sources (useful for Oracle)",
+              "title": "Parallelize",
+              "type": "boolean"
+            },
+            "reflection_level": {
+              "default": "full",
+              "description": "Level of schema reflection",
+              "enum": [
+                "minimal",
+                "full",
+                "full_with_precision"
+              ],
+              "title": "Reflection Level",
+              "type": "string"
+            }
+          },
+          "title": "DatabaseOptionsConfig",
+          "type": "object"
+        },
+        "DatabaseSourceConfig": {
+          "additionalProperties": false,
+          "description": "Database source configuration.\n\nFile location: configs/sources/{subtype}/{source_name}.yaml",
+          "properties": {
+            "connection": {
+              "$ref": "#/$defs/DatabaseConnectionConfig",
+              "description": "Connection configuration"
+            },
+            "description": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Human-readable description",
+              "title": "Description"
+            },
+            "name": {
+              "description": "Unique source name (lowercase snake_case)",
+              "minLength": 1,
+              "pattern": "^[a-z][a-z0-9_]*$",
+              "title": "Name",
+              "type": "string"
+            },
+            "options": {
+              "$ref": "#/$defs/DatabaseOptionsConfig",
+              "description": "Database-specific options"
+            },
+            "retry": {
+              "$ref": "#/$defs/RetryConfig",
+              "description": "Retry configuration"
+            },
+            "subtype": {
+              "$ref": "#/$defs/DatabaseSubtype",
+              "description": "Database type (oracle, mssql, postgres, mysql)"
+            },
+            "tags": {
+              "$ref": "#/$defs/TagsConfig",
+              "description": "Metadata tags"
+            },
+            "type": {
+              "const": "database",
+              "default": "database",
+              "title": "Type",
+              "type": "string"
+            }
+          },
+          "required": [
+            "name",
+            "subtype",
+            "connection"
+          ],
+          "title": "DatabaseSourceConfig",
+          "type": "object"
+        },
+        "DatabaseSubtype": {
+          "description": "Supported database subtypes.",
+          "enum": [
+            "oracle",
+            "mssql",
+            "postgres",
+            "mysql"
+          ],
+          "title": "DatabaseSubtype",
+          "type": "string"
+        },
+        "DatabricksConnectionConfig": {
+          "additionalProperties": false,
+          "description": "Databricks source connection configuration for Reverse ETL.\n\nUses databricks-sql-connector via SQLAlchemy for reading Delta tables\nfrom a remote Databricks workspace.\n\nReference: https://docs.databricks.com/dev-tools/python-sql-connector.html",
+          "properties": {
+            "access_token": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Personal access token or service principal token. Use ${secrets.xxx} pattern.",
+              "title": "Access Token"
+            },
+            "catalog": {
+              "description": "Unity Catalog name to read from",
+              "examples": [
+                "hive_metastore",
+                "main",
+                "prod_catalog"
+              ],
+              "title": "Catalog",
+              "type": "string"
+            },
+            "client_id": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "OAuth client ID for service principal auth. Use ${secrets.xxx}.",
+              "title": "Client Id"
+            },
+            "client_secret": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "OAuth client secret for service principal auth. Use ${secrets.xxx}.",
+              "title": "Client Secret"
+            },
+            "host": {
+              "description": "Databricks workspace host (e.g., 'adb-1234567890123456.7.azuredatabricks.net')",
+              "examples": [
+                "adb-1234567890123456.7.azuredatabricks.net"
+              ],
+              "title": "Host",
+              "type": "string"
+            },
+            "http_path": {
+              "description": "HTTP path for SQL warehouse or cluster (e.g., '/sql/1.0/warehouses/abc123')",
+              "examples": [
+                "/sql/1.0/warehouses/abc123",
+                "/sql/protocolv1/o/1234567890123456/0123-456789-abc123"
+              ],
+              "title": "Http Path",
+              "type": "string"
+            },
+            "schema_name": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Default schema within catalog (optional, can specify per table)",
+              "title": "Schema Name"
+            }
+          },
+          "required": [
+            "host",
+            "http_path",
+            "catalog"
+          ],
+          "title": "DatabricksConnectionConfig",
+          "type": "object"
+        },
+        "DatabricksSourceConfig": {
+          "additionalProperties": false,
+          "description": "Databricks source configuration for Reverse ETL.\n\nFile location: configs/sources/databricks/{source_name}.yaml\n\nUse cases:\n    - Reverse ETL to Oracle (push aggregated data back to operational DB)\n    - Reverse ETL to MSSQL (sync curated data to legacy systems)\n    - Data export to external partners\n    - Push ML predictions or KPIs to transactional systems\n\nImplementation: Uses dlt's sql_database source with databricks-sql-connector.\nThe framework generates SQLAlchemy connection string for Databricks.",
+          "properties": {
+            "connection": {
+              "$ref": "#/$defs/DatabricksConnectionConfig",
+              "description": "Databricks connection configuration"
+            },
+            "description": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Human-readable description (e.g., 'Production workspace sync')",
+              "title": "Description"
+            },
+            "name": {
+              "description": "Unique source name (lowercase snake_case)",
+              "minLength": 1,
+              "pattern": "^[a-z][a-z0-9_]*$",
+              "title": "Name",
+              "type": "string"
+            },
+            "options": {
+              "$ref": "#/$defs/DatabaseOptionsConfig",
+              "description": "Database options (backend, reflection_level, etc.)"
+            },
+            "retry": {
+              "$ref": "#/$defs/RetryConfig",
+              "description": "Retry configuration"
+            },
+            "tags": {
+              "$ref": "#/$defs/TagsConfig",
+              "description": "Metadata tags"
+            },
+            "type": {
+              "const": "databricks",
+              "default": "databricks",
+              "title": "Type",
+              "type": "string"
+            }
+          },
+          "required": [
+            "name",
+            "connection"
+          ],
+          "title": "DatabricksSourceConfig",
+          "type": "object"
+        },
+        "DateGranularity": {
+          "description": "Date granularity for folder partitioning.\n\nBased on GRM Germany FileRepositoryDateGranularity pattern.",
+          "enum": [
+            "year",
+            "year_month",
+            "day",
+            "hour"
+          ],
+          "title": "DateGranularity",
+          "type": "string"
+        },
+        "FileCompression": {
+          "description": "Supported compression types for file output.",
+          "enum": [
+            "snappy",
+            "gzip",
+            "lz4",
+            "zstd",
+            "none"
+          ],
+          "title": "FileCompression",
+          "type": "string"
+        },
+        "FileFormat": {
+          "description": "Supported file formats for filesystem source/destination.\n\ndlt NATIVE READERS:\n    - CSV:     read_csv() via pandas, or read_csv_duckdb() for better performance\n    - PARQUET: read_parquet() via pyarrow\n    - JSONL:   read_jsonl() - line-delimited JSON\n\nFRAMEWORK-PROVIDED TRANSFORMERS:\n    - JSON:  Single JSON files - framework provides read_json() transformer\n\nREQUIRES CUSTOM TRANSFORMERS (contact central team):\n    - AVRO:  Apache Avro format (requires fastavro)\n    - XLSX:  Excel files (requires openpyxl)\n\nPERFORMANCE NOTES:\n    - Use read_csv_duckdb() instead of read_csv() for better CSV performance\n    - Set use_pyarrow=True for Parquet/CSV to enable zero-copy Arrow format\n    - Increase chunk_size for large files (10,000+ recommended for production)",
+          "enum": [
+            "parquet",
+            "csv",
+            "jsonl",
+            "json",
+            "avro"
+          ],
+          "title": "FileFormat",
+          "type": "string"
+        },
+        "FilesystemConnectionConfig": {
+          "additionalProperties": false,
+          "description": "Filesystem connection configuration.\n\nSupports multiple protocols: local, Azure ADLS, S3, GCS, SFTP.",
+          "properties": {
+            "account_name": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Storage account name (Azure) or access key ID (AWS)",
+              "title": "Account Name"
+            },
+            "bucket": {
+              "description": "Container/bucket name (e.g., 'databridge-landing')",
+              "title": "Bucket",
+              "type": "string"
+            },
+            "credentials": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Credentials reference (e.g., '${secrets.azure_storage_sas}')",
+              "title": "Credentials"
+            },
+            "host": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "SFTP host (required for sftp protocol)",
+              "title": "Host"
+            },
+            "port": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "SFTP port (default: 22)",
+              "title": "Port"
+            },
+            "protocol": {
+              "$ref": "#/$defs/FilesystemProtocol",
+              "default": "az",
+              "description": "Filesystem protocol (az, s3, gs, file, sftp)"
+            },
+            "username": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "SFTP username",
+              "title": "Username"
+            }
+          },
+          "required": [
+            "bucket"
+          ],
+          "title": "FilesystemConnectionConfig",
+          "type": "object"
+        },
+        "FilesystemFileOptionsConfig": {
+          "additionalProperties": false,
+          "description": "File format, compression, and performance options for filesystem operations.\n\nNote: file_glob moved to FilesystemPathConfig for source reading.\nThis class handles format, compression, performance tuning, and output file naming.\n\nPERFORMANCE TUNING:\n    - chunk_size: Number of rows/records per batch. Larger = faster but more memory.\n    - use_pyarrow: Enable zero-copy Arrow format for Parquet/CSV (faster for large files).\n    - use_duckdb_csv_reader: Use DuckDB instead of pandas for CSV (faster).\n\nRECOMMENDED SETTINGS BY FILE SIZE:\n    - Small files (<10MB): chunk_size=1000, defaults are fine\n    - Medium files (10-100MB): chunk_size=10000\n    - Large files (>100MB): chunk_size=50000, use_pyarrow=True",
+          "properties": {
+            "chunk_size": {
+              "default": 10000,
+              "description": "Number of rows/records to process per batch.\nLarger values = better throughput but higher memory usage.\nRecommended: 1000 (small files), 10000 (medium), 50000+ (large)",
+              "maximum": 1000000,
+              "minimum": 100,
+              "title": "Chunk Size",
+              "type": "integer"
+            },
+            "compression": {
+              "$ref": "#/$defs/FileCompression",
+              "default": "snappy",
+              "description": "Compression type (snappy, gzip, lz4, zstd, none)"
+            },
+            "file_name_pattern": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Pattern for output file names (destination only).\nVariables: {table_name}, {timestamp}, {load_id}, {year}, {month}, {day}\nExample: '{table_name}_{timestamp}.parquet'",
+              "title": "File Name Pattern"
+            },
+            "format": {
+              "$ref": "#/$defs/FileFormat",
+              "default": "parquet",
+              "description": "File format (parquet, avro, json, jsonl, csv)"
+            },
+            "max_file_size_mb": {
+              "anyOf": [
+                {
+                  "maximum": 1024,
+                  "minimum": 1,
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Maximum output file size in MB before splitting",
+              "title": "Max File Size Mb"
+            },
+            "use_duckdb_csv_reader": {
+              "default": true,
+              "description": "Use DuckDB reader for CSV files instead of pandas.\nDuckDB is typically faster and handles compression better.\nSet to False only if you need specific pandas CSV options.",
+              "title": "Use Duckdb Csv Reader",
+              "type": "boolean"
+            },
+            "use_pyarrow": {
+              "default": false,
+              "description": "Use PyArrow RecordBatch format instead of Python dicts.\nEnables zero-copy operations for better performance with large files.\nOnly effective for Parquet and CSV (with DuckDB reader).\nSet to True when loading large files (>100MB) to Databricks.",
+              "title": "Use Pyarrow",
+              "type": "boolean"
+            }
+          },
+          "title": "FilesystemFileOptionsConfig",
+          "type": "object"
+        },
+        "FilesystemIncrementalConfig": {
+          "additionalProperties": false,
+          "description": "Incremental scanning configuration for filesystem sources.\n\nMaps to dlt's native incremental loading capabilities:\n\n| track_by       | dlt Mapping                                  | Use Case                          |\n|----------------|----------------------------------------------|-----------------------------------|\n| file_modified  | dlt.sources.incremental(\"modification_date\") | Files touched when new data added |\n| file_name      | dlt.sources.incremental(\"file_name\")         | Alphabetical file name ordering   |\n| file_url       | dlt.sources.incremental(\"file_url\")          | Full path ordering (see below)    |\n| folder_date    | Framework parses date from folder path       | GRM-style partitioned folders     |\n\nFILE_URL INCREMENTAL EXPLAINED:\n\nfile_url is the FULL PATH to each file and is dlt's PRIMARY KEY for files.\nSince paths sort lexicographically, date-partitioned paths sort chronologically:\n\n    az://container/data/2024/01/28/orders.parquet  (earlier)\n    az://container/data/2024/01/29/orders.parquet  (later)\n    az://container/data/2024/01/30/orders.parquet  (latest)\n\nUsing file_url incremental with initial_value=\"2024/01/28/\":\n    - dlt will only return files with file_url >= initial_value\n    - After first run, state stores the max file_url processed\n    - Next run only processes files > last processed file_url\n\nThis is ideal for date-partitioned folders where folder names ARE the dates.\n\nFOLDER_DATE vs FILE_URL:\n    - folder_date: Framework parses \"{year}/{month}/{day}\" pattern into date\n    - file_url: Uses raw path string comparison (simpler, more flexible)\n    \nFor most date-partitioned sources, folder_date is preferred because it\nexplicitly understands the date semantics. Use file_url when you need\nraw path-based ordering without date parsing.",
+          "properties": {
+            "enabled": {
+              "default": true,
+              "description": "Enable incremental file scanning",
+              "title": "Enabled",
+              "type": "boolean"
+            },
+            "initial_value": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Initial value for first run. Format depends on track_by:\n- file_modified: ISO datetime '2024-01-01T00:00:00Z'\n- file_name: File name prefix 'data_2024'\n- file_url: Path prefix '2024/01/01/' (matches folder_pattern)\n- folder_date: Folder path '2024/01/01' (matches folder_pattern format)",
+              "title": "Initial Value"
+            },
+            "row_order": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "asc",
+                    "desc"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Sort order for file processing (dlt native support):\n- asc: Process oldest files first (default for most cases)\n- desc: Process newest files first",
+              "title": "Row Order"
+            },
+            "track_by": {
+              "default": "file_modified",
+              "description": "How to track incremental state:\n- file_modified: Track by file modification timestamp (dlt native)\n- file_name: Track by file name ordering (dlt native)\n- file_url: Track by full file path/URL (dlt native)\n- folder_date: Parse date from folder path pattern (framework enhanced)",
+              "enum": [
+                "file_modified",
+                "file_name",
+                "file_url",
+                "folder_date"
+              ],
+              "title": "Track By",
+              "type": "string"
+            }
+          },
+          "title": "FilesystemIncrementalConfig",
+          "type": "object"
+        },
+        "FilesystemPathConfig": {
+          "additionalProperties": false,
+          "description": "Filesystem path configuration with flexible partitioning support.\n\nSupports TWO patterns:\n\n1. MULTI-FOLDER PARTITIONED (GRM Germany style):\n   Base: file-repository/Trading/Oracle\n   Folders: {year}/{month}/{day}/ or year={year}/month={month}/day={day}/\n   Files: *.parquet\n   Result: file-repository/Trading/Oracle/2024/01/28/*.parquet\n\n2. SINGLE-FOLDER with date-in-filename:\n   Base: landing-zone/partner-feed\n   Folders: null (no folder partitioning)\n   Files: data_{year}{month}{day}*.csv\n   Result: landing-zone/partner-feed/data_20240128*.csv\n\nMULTI-LEVEL FOLDER STRUCTURES:\n   The base_path handles any static folder hierarchy BEFORE date folders:\n   \n   Example 1: germany/hr/advisor/2026/01/01/\n     base_path: \"germany/hr/advisor\"\n     folder_pattern: \"{year}/{month}/{day}/\"\n   \n   Example 2: uk/2026/01/01/\n     base_path: \"uk\"\n     folder_pattern: \"{year}/{month}/{day}/\"\n   \n   Example 3: data/region=emea/country=de/2026/01/01/\n     base_path: \"data/region=emea/country=de\"\n     folder_pattern: \"{year}/{month}/{day}/\"\n\nPath pattern variables:\n    - {year}, {month}, {day}, {hour}: Date components\n    - {source_name}, {table_name}: Runtime substitution\n    - {timestamp}, {load_id}: Load-time values",
+          "properties": {
+            "base_path": {
+              "description": "Base path within bucket (e.g., 'file-repository/Trading/Oracle')",
+              "title": "Base Path",
+              "type": "string"
+            },
+            "date_granularity": {
+              "$ref": "#/$defs/DateGranularity",
+              "default": "day",
+              "description": "Date granularity for folder partitioning or filename date extraction"
+            },
+            "file_glob": {
+              "default": "*",
+              "description": "Glob pattern for matching files. Supports date variables for single-folder pattern.\nExamples: '*.parquet', 'data_{year}{month}{day}*.csv', '**/*.json'",
+              "title": "File Glob",
+              "type": "string"
+            },
+            "folder_pattern": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": "{year}/{month}/{day}/",
+              "description": "Folder partition pattern with date variables. Set to null for single-folder sources where date is in filename.\nExamples: '{year}/{month}/{day}/', 'year={year}/month={month}/day={day}/' (Hive-style)",
+              "title": "Folder Pattern"
+            },
+            "partition_style": {
+              "$ref": "#/$defs/PartitionStyle",
+              "default": "numeric",
+              "description": "Partition folder naming style (numeric or hive_style)"
+            }
+          },
+          "required": [
+            "base_path"
+          ],
+          "title": "FilesystemPathConfig",
+          "type": "object"
+        },
+        "FilesystemProtocol": {
+          "description": "Supported filesystem protocols.",
+          "enum": [
+            "file",
+            "az",
+            "s3",
+            "gs",
+            "sftp"
+          ],
+          "title": "FilesystemProtocol",
+          "type": "string"
+        },
+        "FilesystemSourceConfig": {
+          "additionalProperties": false,
+          "description": "Filesystem source configuration for reading from partitioned folders.\n\nFile location: configs/sources/filesystem/{source_name}.yaml\n\nUse cases:\n    - Partner file drops (SFTP \u2192 ADLS \u2192 Databricks)\n    - External data feeds with date-partitioned folders\n    - Historical file migrations",
+          "properties": {
+            "connection": {
+              "$ref": "#/$defs/FilesystemConnectionConfig",
+              "description": "Filesystem connection configuration"
+            },
+            "description": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Human-readable description",
+              "title": "Description"
+            },
+            "file_options": {
+              "$ref": "#/$defs/FilesystemFileOptionsConfig",
+              "description": "File format options"
+            },
+            "incremental": {
+              "$ref": "#/$defs/FilesystemIncrementalConfig",
+              "description": "Incremental scanning configuration"
+            },
+            "name": {
+              "description": "Unique source name (lowercase snake_case)",
+              "minLength": 1,
+              "pattern": "^[a-z][a-z0-9_]*$",
+              "title": "Name",
+              "type": "string"
+            },
+            "path": {
+              "$ref": "#/$defs/FilesystemPathConfig",
+              "description": "Path and partitioning configuration"
+            },
+            "retry": {
+              "$ref": "#/$defs/RetryConfig",
+              "description": "Retry configuration"
+            },
+            "tags": {
+              "$ref": "#/$defs/TagsConfig",
+              "description": "Metadata tags"
+            },
+            "type": {
+              "const": "filesystem",
+              "default": "filesystem",
+              "title": "Type",
+              "type": "string"
+            }
+          },
+          "required": [
+            "name",
+            "connection",
+            "path"
+          ],
+          "title": "FilesystemSourceConfig",
+          "type": "object"
+        },
+        "HeaderLinkPaginatorConfig": {
+          "additionalProperties": false,
+          "description": "Paginator for APIs where next page URL is in response headers.",
+          "properties": {
+            "links_next_key": {
+              "default": "next",
+              "description": "Relation key in Link header for next page",
+              "title": "Links Next Key",
+              "type": "string"
+            },
+            "type": {
+              "const": "header_link",
+              "default": "header_link",
+              "title": "Type",
+              "type": "string"
+            }
+          },
+          "title": "HeaderLinkPaginatorConfig",
+          "type": "object"
+        },
+        "IncrementalConfig": {
+          "additionalProperties": false,
+          "description": "Incremental loading configuration.\n\nReference: https://dlthub.com/docs/general-usage/incremental-loading",
+          "properties": {
+            "cursor_path": {
+              "description": "Path to cursor field in response/row (REQUIRED)",
+              "title": "Cursor Path",
+              "type": "string"
+            },
+            "end_param": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Query parameter name for end value (optional)",
+              "title": "End Param"
+            },
+            "end_value": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "End value (optional, for bounded extractions)",
+              "title": "End Value"
+            },
+            "initial_value": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Initial value for first run (e.g., '2024-01-01T00:00:00Z')",
+              "title": "Initial Value"
+            },
+            "start_param": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Query parameter name for start value (optional for REST APIs)",
+              "title": "Start Param"
+            }
+          },
+          "required": [
+            "cursor_path"
+          ],
+          "title": "IncrementalConfig",
+          "type": "object"
+        },
+        "JsonLinkPaginatorConfig": {
+          "additionalProperties": false,
+          "description": "Paginator for APIs where next page URL is in JSON response body.",
+          "properties": {
+            "next_url_path": {
+              "default": "next",
+              "description": "JSONPath to next page URL in response",
+              "title": "Next Url Path",
+              "type": "string"
+            },
+            "type": {
+              "const": "json_link",
+              "default": "json_link",
+              "title": "Type",
+              "type": "string"
+            }
+          },
+          "title": "JsonLinkPaginatorConfig",
+          "type": "object"
+        },
+        "OAuth2AuthConfig": {
+          "additionalProperties": false,
+          "description": "OAuth2 authentication configuration.",
+          "properties": {
+            "client_id": {
+              "description": "OAuth2 client ID (use ${secrets.xxx} for secret reference)",
+              "title": "Client Id",
+              "type": "string"
+            },
+            "client_secret": {
+              "description": "OAuth2 client secret (use ${secrets.xxx} for secret reference)",
+              "title": "Client Secret",
+              "type": "string"
+            },
+            "scopes": {
+              "description": "OAuth2 scopes to request",
+              "items": {
+                "type": "string"
+              },
+              "title": "Scopes",
+              "type": "array"
+            },
+            "token_url": {
+              "description": "OAuth2 token endpoint URL",
+              "title": "Token Url",
+              "type": "string"
+            },
+            "type": {
+              "const": "oauth2",
+              "default": "oauth2",
+              "title": "Type",
+              "type": "string"
+            }
+          },
+          "required": [
+            "token_url",
+            "client_id",
+            "client_secret"
+          ],
+          "title": "OAuth2AuthConfig",
+          "type": "object"
+        },
+        "OffsetPaginatorConfig": {
+          "additionalProperties": false,
+          "description": "Offset-based pagination configuration.",
+          "properties": {
+            "limit": {
+              "description": "Number of items per page",
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            },
+            "limit_param": {
+              "default": "limit",
+              "description": "Query parameter name for limit",
+              "title": "Limit Param",
+              "type": "string"
+            },
+            "maximum_offset": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Maximum offset to reach (optional cap)",
+              "title": "Maximum Offset"
+            },
+            "offset_param": {
+              "default": "offset",
+              "description": "Query parameter name for offset",
+              "title": "Offset Param",
+              "type": "string"
+            },
+            "stop_after_empty_page": {
+              "default": true,
+              "description": "Stop when empty page is encountered",
+              "title": "Stop After Empty Page",
+              "type": "boolean"
+            },
+            "total_path": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": "total",
+              "description": "JSONPath to total count in response (None if not available)",
+              "title": "Total Path"
+            },
+            "type": {
+              "const": "offset",
+              "default": "offset",
+              "title": "Type",
+              "type": "string"
+            }
+          },
+          "required": [
+            "limit"
+          ],
+          "title": "OffsetPaginatorConfig",
+          "type": "object"
+        },
+        "PageNumberPaginatorConfig": {
+          "additionalProperties": false,
+          "description": "Page number-based pagination configuration.",
+          "properties": {
+            "base_page": {
+              "default": 1,
+              "description": "Starting page number (0 or 1 depending on API)",
+              "minimum": 0,
+              "title": "Base Page",
+              "type": "integer"
+            },
+            "maximum_page": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Maximum page number to request",
+              "title": "Maximum Page"
+            },
+            "page_param": {
+              "default": "page",
+              "description": "Query parameter name for page number",
+              "title": "Page Param",
+              "type": "string"
+            },
+            "stop_after_empty_page": {
+              "default": true,
+              "description": "Stop when empty page is encountered",
+              "title": "Stop After Empty Page",
+              "type": "boolean"
+            },
+            "total_path": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": "total_pages",
+              "description": "JSONPath to total pages in response",
+              "title": "Total Path"
+            },
+            "type": {
+              "const": "page_number",
+              "default": "page_number",
+              "title": "Type",
+              "type": "string"
+            }
+          },
+          "title": "PageNumberPaginatorConfig",
+          "type": "object"
+        },
+        "PartitionStyle": {
+          "description": "Folder partition naming style.",
+          "enum": [
+            "numeric",
+            "hive_style"
+          ],
+          "title": "PartitionStyle",
+          "type": "string"
+        },
+        "RateLimitConfig": {
+          "additionalProperties": false,
+          "description": "Rate limiting configuration for REST APIs.",
+          "properties": {
+            "requests_per_second": {
+              "default": 10.0,
+              "description": "Maximum requests per second",
+              "maximum": 1000.0,
+              "minimum": 0.1,
+              "title": "Requests Per Second",
+              "type": "number"
+            }
+          },
+          "title": "RateLimitConfig",
+          "type": "object"
+        },
+        "RestApiConnectionConfig": {
+          "additionalProperties": false,
+          "description": "REST API connection configuration.",
+          "properties": {
+            "auth": {
+              "anyOf": [
+                {
+                  "discriminator": {
+                    "mapping": {
+                      "api_key": "#/$defs/ApiKeyAuthConfig",
+                      "basic": "#/$defs/BasicAuthConfig",
+                      "bearer_token": "#/$defs/BearerTokenAuthConfig",
+                      "oauth2": "#/$defs/OAuth2AuthConfig"
+                    },
+                    "propertyName": "type"
+                  },
+                  "oneOf": [
+                    {
+                      "$ref": "#/$defs/ApiKeyAuthConfig"
+                    },
+                    {
+                      "$ref": "#/$defs/BearerTokenAuthConfig"
+                    },
+                    {
+                      "$ref": "#/$defs/BasicAuthConfig"
+                    },
+                    {
+                      "$ref": "#/$defs/OAuth2AuthConfig"
+                    }
+                  ]
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Authentication configuration",
+              "title": "Auth"
+            },
+            "base_url": {
+              "description": "API base URL (must start with http:// or https://)",
+              "pattern": "^https?://",
+              "title": "Base Url",
+              "type": "string"
+            },
+            "headers": {
+              "additionalProperties": {
+                "type": "string"
+              },
+              "description": "Default headers for all requests",
+              "title": "Headers",
+              "type": "object"
+            },
+            "rate_limit": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/RateLimitConfig"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Rate limiting configuration"
+            }
+          },
+          "required": [
+            "base_url"
+          ],
+          "title": "RestApiConnectionConfig",
+          "type": "object"
+        },
+        "RestApiResourceConfig": {
+          "additionalProperties": false,
+          "description": "Configuration for a single REST API endpoint.",
+          "properties": {
+            "data_quality": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/DataQualityConfig"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Resource-level data quality checks"
+            },
+            "data_selector": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "JSONPath to data array in response (e.g., 'data.items')",
+              "title": "Data Selector"
+            },
+            "endpoint": {
+              "description": "API endpoint path (e.g., '/users' or '/orgs/{org}/repos')",
+              "title": "Endpoint",
+              "type": "string"
+            },
+            "incremental": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/IncrementalConfig"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Incremental loading configuration"
+            },
+            "method": {
+              "default": "GET",
+              "description": "HTTP method",
+              "enum": [
+                "GET",
+                "POST"
+              ],
+              "title": "Method",
+              "type": "string"
+            },
+            "name": {
+              "description": "Resource name (becomes table name)",
+              "minLength": 1,
+              "title": "Name",
+              "type": "string"
+            },
+            "pagination": {
+              "anyOf": [
+                {
+                  "discriminator": {
+                    "mapping": {
+                      "cursor": "#/$defs/CursorPaginatorConfig",
+                      "header_link": "#/$defs/HeaderLinkPaginatorConfig",
+                      "json_link": "#/$defs/JsonLinkPaginatorConfig",
+                      "offset": "#/$defs/OffsetPaginatorConfig",
+                      "page_number": "#/$defs/PageNumberPaginatorConfig",
+                      "single_page": "#/$defs/SinglePagePaginatorConfig"
+                    },
+                    "propertyName": "type"
+                  },
+                  "oneOf": [
+                    {
+                      "$ref": "#/$defs/JsonLinkPaginatorConfig"
+                    },
+                    {
+                      "$ref": "#/$defs/HeaderLinkPaginatorConfig"
+                    },
+                    {
+                      "$ref": "#/$defs/OffsetPaginatorConfig"
+                    },
+                    {
+                      "$ref": "#/$defs/PageNumberPaginatorConfig"
+                    },
+                    {
+                      "$ref": "#/$defs/CursorPaginatorConfig"
+                    },
+                    {
+                      "$ref": "#/$defs/SinglePagePaginatorConfig"
+                    }
+                  ]
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Pagination configuration (overrides client default)",
+              "title": "Pagination"
+            },
+            "parallelized": {
+              "default": true,
+              "description": "Enable parallel extraction for this resource. When True, this resource can run concurrently with other parallelized resources in the same source (requires extract_workers > 1).",
+              "title": "Parallelized",
+              "type": "boolean"
+            },
+            "params": {
+              "additionalProperties": true,
+              "description": "Query parameters",
+              "title": "Params",
+              "type": "object"
+            },
+            "primary_key": {
+              "anyOf": [
+                {
+                  "items": {
+                    "type": "string"
+                  },
+                  "type": "array"
+                },
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Primary key column(s). Set explicitly if needed for merge operations.",
+              "title": "Primary Key"
+            },
+            "write_disposition": {
+              "$ref": "#/$defs/WriteDisposition",
+              "default": "merge",
+              "description": "How to write data to destination"
+            }
+          },
+          "required": [
+            "name",
+            "endpoint"
+          ],
+          "title": "RestApiResourceConfig",
+          "type": "object"
+        },
+        "RestApiResourceDefaultsConfig": {
+          "additionalProperties": false,
+          "description": "Shared defaults for all REST API resources.\n\nUse this to avoid repeating common settings across 50+ endpoints.\nIndividual resource configs can override any of these defaults.\n\nExample YAML:\n    resource_defaults:\n      primary_key: \"id\"\n      write_disposition: \"merge\"\n      params:\n        per_page: 100\n      pagination:\n        type: \"header_link\"\n        links_next_key: \"next\"",
+          "properties": {
+            "data_selector": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Default JSONPath to data array in response",
+              "title": "Data Selector"
+            },
+            "pagination": {
+              "anyOf": [
+                {
+                  "discriminator": {
+                    "mapping": {
+                      "cursor": "#/$defs/CursorPaginatorConfig",
+                      "header_link": "#/$defs/HeaderLinkPaginatorConfig",
+                      "json_link": "#/$defs/JsonLinkPaginatorConfig",
+                      "offset": "#/$defs/OffsetPaginatorConfig",
+                      "page_number": "#/$defs/PageNumberPaginatorConfig",
+                      "single_page": "#/$defs/SinglePagePaginatorConfig"
+                    },
+                    "propertyName": "type"
+                  },
+                  "oneOf": [
+                    {
+                      "$ref": "#/$defs/JsonLinkPaginatorConfig"
+                    },
+                    {
+                      "$ref": "#/$defs/HeaderLinkPaginatorConfig"
+                    },
+                    {
+                      "$ref": "#/$defs/OffsetPaginatorConfig"
+                    },
+                    {
+                      "$ref": "#/$defs/PageNumberPaginatorConfig"
+                    },
+                    {
+                      "$ref": "#/$defs/CursorPaginatorConfig"
+                    },
+                    {
+                      "$ref": "#/$defs/SinglePagePaginatorConfig"
+                    }
+                  ]
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Default pagination for all endpoints",
+              "title": "Pagination"
+            },
+            "params": {
+              "additionalProperties": true,
+              "description": "Default query parameters for all endpoints",
+              "title": "Params",
+              "type": "object"
+            },
+            "primary_key": {
+              "anyOf": [
+                {
+                  "items": {
+                    "type": "string"
+                  },
+                  "type": "array"
+                },
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Default primary key for all resources. Set explicitly if needed.",
+              "title": "Primary Key"
+            },
+            "write_disposition": {
+              "$ref": "#/$defs/WriteDisposition",
+              "default": "merge",
+              "description": "Default write disposition for all resources"
+            }
+          },
+          "title": "RestApiResourceDefaultsConfig",
+          "type": "object"
+        },
+        "RestApiSourceConfig": {
+          "additionalProperties": false,
+          "description": "REST API source configuration.\n\nFile location: configs/sources/rest_api/{source_name}.yaml\n\nFeatures:\n    - resource_defaults: Shared settings applied to all resources\n    - resources: Individual endpoint configurations\n    - Rate limiting support via connection.rate_limit",
+          "properties": {
+            "connection": {
+              "$ref": "#/$defs/RestApiConnectionConfig",
+              "description": "API connection configuration"
+            },
+            "description": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Human-readable description",
+              "title": "Description"
+            },
+            "name": {
+              "description": "Unique source name (lowercase snake_case)",
+              "minLength": 1,
+              "pattern": "^[a-z][a-z0-9_]*$",
+              "title": "Name",
+              "type": "string"
+            },
+            "resource_defaults": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/RestApiResourceDefaultsConfig"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Default settings applied to all resources. Individual resource configs can override these values."
+            },
+            "resources": {
+              "description": "API endpoints to extract (can also be in separate resource files)",
+              "items": {
+                "$ref": "#/$defs/RestApiResourceConfig"
+              },
+              "title": "Resources",
+              "type": "array"
+            },
+            "retry": {
+              "$ref": "#/$defs/RetryConfig",
+              "description": "Retry configuration"
+            },
+            "tags": {
+              "$ref": "#/$defs/TagsConfig",
+              "description": "Metadata tags"
+            },
+            "type": {
+              "const": "rest_api",
+              "default": "rest_api",
+              "title": "Type",
+              "type": "string"
+            }
+          },
+          "required": [
+            "name",
+            "connection"
+          ],
+          "title": "RestApiSourceConfig",
+          "type": "object"
+        },
+        "RetryConfig": {
+          "additionalProperties": false,
+          "description": "Configuration for retry behavior with exponential backoff.\n\nUses tenacity library patterns.\nReference: https://tenacity.readthedocs.io/",
+          "properties": {
+            "backoff_multiplier": {
+              "default": 2.0,
+              "description": "Multiplier for exponential backoff",
+              "maximum": 5.0,
+              "minimum": 1.0,
+              "title": "Backoff Multiplier",
+              "type": "number"
+            },
+            "initial_delay_seconds": {
+              "default": 30.0,
+              "description": "Initial delay before first retry (seconds)",
+              "maximum": 600.0,
+              "minimum": 0.01,
+              "title": "Initial Delay Seconds",
+              "type": "number"
+            },
+            "max_attempts": {
+              "default": 3,
+              "description": "Maximum number of retry attempts",
+              "maximum": 10,
+              "minimum": 1,
+              "title": "Max Attempts",
+              "type": "integer"
+            },
+            "max_delay_seconds": {
+              "default": 300.0,
+              "description": "Maximum delay between retries (seconds)",
+              "maximum": 3600.0,
+              "minimum": 0.1,
+              "title": "Max Delay Seconds",
+              "type": "number"
+            },
+            "retriable_exceptions": {
+              "description": "Exception types that should trigger retry",
+              "items": {
+                "type": "string"
+              },
+              "title": "Retriable Exceptions",
+              "type": "array"
+            },
+            "retriable_status_codes": {
+              "description": "HTTP status codes that should trigger retry (for REST APIs)",
+              "items": {
+                "type": "integer"
+              },
+              "title": "Retriable Status Codes",
+              "type": "array"
+            }
+          },
+          "title": "RetryConfig",
+          "type": "object"
+        },
+        "SinglePagePaginatorConfig": {
+          "additionalProperties": false,
+          "description": "Configuration for endpoints that return all data in single response.",
+          "properties": {
+            "type": {
+              "const": "single_page",
+              "default": "single_page",
+              "title": "Type",
+              "type": "string"
+            }
+          },
+          "title": "SinglePagePaginatorConfig",
+          "type": "object"
+        },
+        "TagsConfig": {
+          "additionalProperties": true,
+          "description": "Metadata tags for governance and discovery.",
+          "properties": {
+            "environment": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Environment (dev, staging, production)",
+              "title": "Environment"
+            },
+            "market": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Market/region identifier",
+              "title": "Market"
+            },
+            "owner": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Team or individual owner email",
+              "title": "Owner"
+            }
+          },
+          "title": "TagsConfig",
+          "type": "object"
+        },
+        "WriteDisposition": {
+          "description": "dlt write disposition modes.\n\nReference: https://dlthub.com/docs/general-usage/incremental-loading",
+          "enum": [
+            "append",
+            "replace",
+            "merge"
+          ],
+          "title": "WriteDisposition",
           "type": "string"
         }
       },
-      "required": [
-        "name",
-        "connection"
-      ],
-      "title": "RestApiSourceConfig",
-      "type": "object"
-    },
-    "RetryConfig": {
-      "additionalProperties": false,
-      "description": "Configuration for retry behavior with exponential backoff.\n\nUses tenacity library patterns.\nReference: https://tenacity.readthedocs.io/",
-      "properties": {
-        "backoff_multiplier": {
-          "default": 2.0,
-          "description": "Multiplier for exponential backoff",
-          "maximum": 5.0,
-          "minimum": 1.0,
-          "title": "Backoff Multiplier",
-          "type": "number"
+      "anyOf": [
+        {
+          "$ref": "#/$defs/DatabaseSourceConfig"
         },
-        "initial_delay_seconds": {
-          "default": 30.0,
-          "description": "Initial delay before first retry (seconds)",
-          "maximum": 600.0,
-          "minimum": 0.01,
-          "title": "Initial Delay Seconds",
-          "type": "number"
+        {
+          "$ref": "#/$defs/RestApiSourceConfig"
         },
-        "max_attempts": {
-          "default": 3,
-          "description": "Maximum number of retry attempts",
-          "maximum": 10,
-          "minimum": 1,
-          "title": "Max Attempts",
-          "type": "integer"
+        {
+          "$ref": "#/$defs/FilesystemSourceConfig"
         },
-        "max_delay_seconds": {
-          "default": 300.0,
-          "description": "Maximum delay between retries (seconds)",
-          "maximum": 3600.0,
-          "minimum": 0.1,
-          "title": "Max Delay Seconds",
-          "type": "number"
-        },
-        "retriable_exceptions": {
-          "description": "Exception types that should trigger retry",
-          "items": {
-            "type": "string"
-          },
-          "title": "Retriable Exceptions",
-          "type": "array"
-        },
-        "retriable_status_codes": {
-          "description": "HTTP status codes that should trigger retry (for REST APIs)",
-          "items": {
-            "type": "integer"
-          },
-          "title": "Retriable Status Codes",
-          "type": "array"
+        {
+          "$ref": "#/$defs/DatabricksSourceConfig"
         }
-      },
-      "title": "RetryConfig",
-      "type": "object"
-    },
-    "SinglePagePaginatorConfig": {
-      "additionalProperties": false,
-      "description": "Configuration for endpoints that return all data in single response.",
-      "properties": {
-        "type": {
-          "const": "single_page",
-          "default": "single_page",
-          "title": "Type",
-          "type": "string"
-        }
-      },
-      "title": "SinglePagePaginatorConfig",
-      "type": "object"
-    },
-    "TagsConfig": {
-      "additionalProperties": true,
-      "description": "Metadata tags for governance and discovery.",
-      "properties": {
-        "environment": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "description": "Environment (dev, staging, production)",
-          "title": "Environment"
-        },
-        "market": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "description": "Market/region identifier",
-          "title": "Market"
-        },
-        "owner": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "description": "Team or individual owner email",
-          "title": "Owner"
-        }
-      },
-      "title": "TagsConfig",
-      "type": "object"
-    },
-    "WriteDisposition": {
-      "description": "dlt write disposition modes.\n\nReference: https://dlthub.com/docs/general-usage/incremental-loading",
-      "enum": [
-        "append",
-        "replace",
-        "merge"
-      ],
-      "title": "WriteDisposition",
-      "type": "string"
+      ]
     }
   },
-  "anyOf": [
-    {
-      "$ref": "#/$defs/DatabaseSourceConfig"
-    },
-    {
-      "$ref": "#/$defs/RestApiSourceConfig"
-    },
-    {
-      "$ref": "#/$defs/FilesystemSourceConfig"
-    },
-    {
-      "$ref": "#/$defs/DatabricksSourceConfig"
-    }
-  ]
+  "required": [
+    "source"
+  ],
+  "type": "object"
 }

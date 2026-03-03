@@ -18,6 +18,10 @@ on:
         required: false
         type: string
         default: "ingestion/configs/resources/**/*.y*ml"
+    secrets:
+      CI_TEMPLATES_TOKEN:
+        description: "PAT with read access to ci-templates repo (optional if repo is public)"
+        required: false
 
 permissions:
   contents: read
@@ -33,6 +37,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: midhilesh-grm/mm_databridge-ci-templates
+          token: ${{ secrets.CI_TEMPLATES_TOKEN || github.token }}
           path: ci-templates
 
       - name: Setup Python

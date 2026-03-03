@@ -1,1367 +1,1377 @@
 {
-  "$defs": {
-    "ClusterConfig": {
-      "additionalProperties": false,
-      "description": "Table clustering configuration.\n\nDestination-Specific Behavior:\n    - Databricks: Uses Liquid Clustering (not ZORDER). Use \"AUTO\" for automatic.\n                 Cannot use with partition on same table.\n    - BigQuery: Uses cluster_by, max 4 fields enforced by BigQuery.\n    - Oracle/MSSQL: Not supported (validation will reject).\n\nNote: Field count validation is done at runtime based on destination type.",
-      "properties": {
-        "fields": {
-          "anyOf": [
-            {
-              "items": {
-                "type": "string"
-              },
-              "type": "array"
-            },
-            {
-              "const": "AUTO",
-              "type": "string"
-            }
-          ],
-          "description": "Fields to cluster by, or 'AUTO' for Databricks auto liquid clustering",
-          "title": "Fields"
-        }
-      },
-      "required": [
-        "fields"
-      ],
-      "title": "ClusterConfig",
-      "type": "object"
-    },
-    "DQCheckCustomSql": {
-      "additionalProperties": false,
-      "description": "Custom SQL check configuration.",
-      "properties": {
-        "max_failures": {
-          "default": 0,
-          "description": "Maximum allowed failures (0 = no failures allowed)",
-          "minimum": 0,
-          "title": "Max Failures",
-          "type": "integer"
-        },
-        "query": {
-          "description": "SQL query returning failure count (use {table} placeholder)",
-          "title": "Query",
-          "type": "string"
-        },
-        "severity": {
-          "$ref": "#/$defs/DQSeverity",
-          "default": "error",
-          "description": "Severity level if check fails"
-        },
-        "type": {
-          "const": "custom_sql",
-          "default": "custom_sql",
-          "title": "Type",
-          "type": "string"
-        }
-      },
-      "required": [
-        "query"
-      ],
-      "title": "DQCheckCustomSql",
-      "type": "object"
-    },
-    "DQCheckFreshness": {
-      "additionalProperties": false,
-      "description": "Data freshness check configuration.",
-      "properties": {
-        "column": {
-          "description": "Timestamp column to check for freshness",
-          "title": "Column",
-          "type": "string"
-        },
-        "max_age_hours": {
-          "description": "Maximum allowed age in hours",
-          "minimum": 1,
-          "title": "Max Age Hours",
-          "type": "integer"
-        },
-        "severity": {
-          "$ref": "#/$defs/DQSeverity",
-          "default": "error",
-          "description": "Severity level if check fails"
-        },
-        "type": {
-          "const": "freshness",
-          "default": "freshness",
-          "title": "Type",
-          "type": "string"
-        }
-      },
-      "required": [
-        "column",
-        "max_age_hours"
-      ],
-      "title": "DQCheckFreshness",
-      "type": "object"
-    },
-    "DQCheckNotNull": {
-      "additionalProperties": false,
-      "description": "Not null check configuration.",
-      "properties": {
-        "columns": {
-          "description": "Columns to check for null values",
-          "items": {
-            "type": "string"
-          },
-          "minItems": 1,
-          "title": "Columns",
-          "type": "array"
-        },
-        "severity": {
-          "$ref": "#/$defs/DQSeverity",
-          "default": "error",
-          "description": "Severity level if check fails"
-        },
-        "type": {
-          "const": "not_null",
-          "default": "not_null",
-          "title": "Type",
-          "type": "string"
-        }
-      },
-      "required": [
-        "columns"
-      ],
-      "title": "DQCheckNotNull",
-      "type": "object"
-    },
-    "DQCheckRange": {
-      "additionalProperties": false,
-      "description": "Value range check configuration.",
-      "properties": {
-        "column": {
-          "description": "Column to check for value range",
-          "title": "Column",
-          "type": "string"
-        },
-        "max_value": {
-          "anyOf": [
-            {
-              "type": "number"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "description": "Maximum allowed value (inclusive)",
-          "title": "Max Value"
-        },
-        "min_value": {
-          "anyOf": [
-            {
-              "type": "number"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "description": "Minimum allowed value (inclusive)",
-          "title": "Min Value"
-        },
-        "severity": {
-          "$ref": "#/$defs/DQSeverity",
-          "default": "error",
-          "description": "Severity level if check fails"
-        },
-        "type": {
-          "const": "range",
-          "default": "range",
-          "title": "Type",
-          "type": "string"
-        }
-      },
-      "required": [
-        "column"
-      ],
-      "title": "DQCheckRange",
-      "type": "object"
-    },
-    "DQCheckRegex": {
-      "additionalProperties": false,
-      "description": "Regex pattern check configuration.",
-      "properties": {
-        "column": {
-          "description": "Column to validate against pattern",
-          "title": "Column",
-          "type": "string"
-        },
-        "pattern": {
-          "description": "Regular expression pattern",
-          "title": "Pattern",
-          "type": "string"
-        },
-        "severity": {
-          "$ref": "#/$defs/DQSeverity",
-          "default": "warning",
-          "description": "Severity level if check fails"
-        },
-        "type": {
-          "const": "regex",
-          "default": "regex",
-          "title": "Type",
-          "type": "string"
-        }
-      },
-      "required": [
-        "column",
-        "pattern"
-      ],
-      "title": "DQCheckRegex",
-      "type": "object"
-    },
-    "DQCheckUnique": {
-      "additionalProperties": false,
-      "description": "Uniqueness check configuration.",
-      "properties": {
-        "columns": {
-          "description": "Columns to check for uniqueness (compound key if multiple)",
-          "items": {
-            "type": "string"
-          },
-          "minItems": 1,
-          "title": "Columns",
-          "type": "array"
-        },
-        "severity": {
-          "$ref": "#/$defs/DQSeverity",
-          "default": "error",
-          "description": "Severity level if check fails"
-        },
-        "type": {
-          "const": "unique",
-          "default": "unique",
-          "title": "Type",
-          "type": "string"
-        }
-      },
-      "required": [
-        "columns"
-      ],
-      "title": "DQCheckUnique",
-      "type": "object"
-    },
-    "DQSeverity": {
-      "description": "Data quality check severity levels.",
-      "enum": [
-        "error",
-        "warning"
-      ],
-      "title": "DQSeverity",
-      "type": "string"
-    },
-    "DataQualityConfig": {
-      "additionalProperties": false,
-      "description": "Data quality configuration for a table or pipeline.",
-      "properties": {
-        "checks": {
-          "description": "List of data quality checks to run",
-          "items": {
-            "discriminator": {
-              "mapping": {
-                "custom_sql": "#/$defs/DQCheckCustomSql",
-                "freshness": "#/$defs/DQCheckFreshness",
-                "not_null": "#/$defs/DQCheckNotNull",
-                "range": "#/$defs/DQCheckRange",
-                "regex": "#/$defs/DQCheckRegex",
-                "unique": "#/$defs/DQCheckUnique"
-              },
-              "propertyName": "type"
-            },
-            "oneOf": [
-              {
-                "$ref": "#/$defs/DQCheckNotNull"
-              },
-              {
-                "$ref": "#/$defs/DQCheckUnique"
-              },
-              {
-                "$ref": "#/$defs/DQCheckRegex"
-              },
-              {
-                "$ref": "#/$defs/DQCheckRange"
-              },
-              {
-                "$ref": "#/$defs/DQCheckFreshness"
-              },
-              {
-                "$ref": "#/$defs/DQCheckCustomSql"
-              }
-            ]
-          },
-          "title": "Checks",
-          "type": "array"
-        },
-        "enabled": {
-          "default": true,
-          "description": "Enable data quality checks",
-          "title": "Enabled",
-          "type": "boolean"
-        },
-        "fail_on_error": {
-          "default": false,
-          "description": "Fail pipeline if any DQ check fails with ERROR severity",
-          "title": "Fail On Error",
-          "type": "boolean"
-        }
-      },
-      "title": "DataQualityConfig",
-      "type": "object"
-    },
-    "IncrementalGroupConfig": {
-      "additionalProperties": false,
-      "description": "Group configuration for incremental tables with shared cursor_field default.\n\nUse when multiple tables share the same cursor_field pattern.",
-      "properties": {
-        "default_cursor_field": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "description": "Default cursor field for all tables in this group",
-          "title": "Default Cursor Field"
-        },
-        "default_cursor_initial_value": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "description": "Default initial cursor value",
-          "title": "Default Cursor Initial Value"
-        },
-        "tables": {
-          "description": "List of incremental tables",
-          "items": {
-            "$ref": "#/$defs/IncrementalTableEntry"
-          },
-          "minItems": 1,
-          "title": "Tables",
-          "type": "array"
-        }
-      },
-      "required": [
-        "tables"
-      ],
-      "title": "IncrementalGroupConfig",
-      "type": "object"
-    },
-    "IncrementalTableEntry": {
-      "additionalProperties": false,
-      "description": "Simplified entry for incremental (append) tables.\n\nIncremental tables use:\n    - mode: \"incremental\" (automatic)\n    - write_disposition: \"append\" (automatic, Bronze layer pattern)\n    - cursor_field: Required for tracking changes\n\nThis is the recommended pattern for Bronze layer ingestion.\nSupports custom_query for complex incremental extractions.",
-      "properties": {
-        "add_load_date": {
-          "anyOf": [
-            {
-              "type": "boolean"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "description": "Override default add_load_date setting",
-          "title": "Add Load Date"
-        },
-        "cluster": {
-          "anyOf": [
-            {
-              "$ref": "#/$defs/ClusterConfig"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "description": "Clustering configuration (overrides default)"
-        },
-        "columns": {
-          "anyOf": [
-            {
-              "items": {
-                "type": "string"
-              },
-              "type": "array"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "description": "Explicit column selection (None = all columns)",
-          "title": "Columns"
-        },
-        "cursor_field": {
-          "description": "Field for incremental cursor (required)",
-          "title": "Cursor Field",
-          "type": "string"
-        },
-        "cursor_initial_value": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "integer"
-            },
-            {
-              "type": "number"
-            },
-            {
-              "format": "date-time",
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "description": "Initial cursor value (string for dates, int for IDs, float for decimals)",
-          "title": "Cursor Initial Value"
-        },
-        "custom_query": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "description": "Custom SQL query instead of table extraction",
-          "title": "Custom Query"
-        },
-        "data_quality": {
-          "anyOf": [
-            {
-              "$ref": "#/$defs/DataQualityConfig"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "description": "Data quality configuration (overrides default)"
-        },
-        "name": {
-          "description": "Table name",
-          "minLength": 1,
-          "title": "Name",
-          "type": "string"
-        },
-        "partition": {
-          "anyOf": [
-            {
-              "$ref": "#/$defs/PartitionConfig"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "description": "Partitioning configuration (overrides default)"
-        },
-        "primary_key": {
-          "anyOf": [
-            {
-              "items": {
-                "type": "string"
-              },
-              "type": "array"
-            },
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "description": "Primary key column(s) - optional for append, useful for dbt dedup",
-          "title": "Primary Key"
-        },
-        "query_params": {
-          "anyOf": [
-            {
-              "additionalProperties": true,
-              "type": "object"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "description": "Parameters for custom query",
-          "title": "Query Params"
-        },
-        "schema": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "description": "Schema name (overrides default)",
-          "title": "Schema"
-        },
-        "schema_contract": {
-          "anyOf": [
-            {
-              "$ref": "#/$defs/SchemaContract"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "description": "Schema contract override for this table"
-        }
-      },
-      "required": [
-        "name",
-        "cursor_field"
-      ],
-      "title": "IncrementalTableEntry",
-      "type": "object"
-    },
-    "LoadMode": {
-      "description": "Table loading mode.",
-      "enum": [
-        "incremental",
-        "snapshot"
-      ],
-      "title": "LoadMode",
-      "type": "string"
-    },
-    "MergeTableEntry": {
-      "additionalProperties": false,
-      "description": "Simplified entry for merge (upsert) tables.\n\nMerge tables use:\n    - mode: \"incremental\" (automatic)\n    - write_disposition: \"merge\" (automatic)\n    - primary_key: Required for merge operation\n\nUse Cases:\n    - Reverse ETL (pushing data back to sources)\n    - Dimension tables requiring exact state\n    - NOT recommended for Bronze layer (use append instead)\n\nNote: This is planned for Phase 2 (Reverse ETL support).\nSupports custom_query for complex merge extractions.",
-      "properties": {
-        "add_load_date": {
-          "anyOf": [
-            {
-              "type": "boolean"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "description": "Override default add_load_date setting",
-          "title": "Add Load Date"
-        },
-        "cluster": {
-          "anyOf": [
-            {
-              "$ref": "#/$defs/ClusterConfig"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "description": "Clustering configuration (overrides default)"
-        },
-        "columns": {
-          "anyOf": [
-            {
-              "items": {
-                "type": "string"
-              },
-              "type": "array"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "description": "Explicit column selection (None = all columns)",
-          "title": "Columns"
-        },
-        "cursor_field": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "description": "Optional cursor field for incremental merge",
-          "title": "Cursor Field"
-        },
-        "cursor_initial_value": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "description": "Initial cursor value for first run",
-          "title": "Cursor Initial Value"
-        },
-        "custom_query": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "description": "Custom SQL query instead of table extraction",
-          "title": "Custom Query"
-        },
-        "data_quality": {
-          "anyOf": [
-            {
-              "$ref": "#/$defs/DataQualityConfig"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "description": "Data quality configuration (overrides default)"
-        },
-        "name": {
-          "description": "Table name",
-          "minLength": 1,
-          "title": "Name",
-          "type": "string"
-        },
-        "partition": {
-          "anyOf": [
-            {
-              "$ref": "#/$defs/PartitionConfig"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "description": "Partitioning configuration (overrides default)"
-        },
-        "primary_key": {
-          "anyOf": [
-            {
-              "items": {
-                "type": "string"
-              },
-              "type": "array"
-            },
-            {
-              "type": "string"
-            }
-          ],
-          "description": "Primary key column(s) - required for merge",
-          "title": "Primary Key"
-        },
-        "query_params": {
-          "anyOf": [
-            {
-              "additionalProperties": true,
-              "type": "object"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "description": "Parameters for custom query",
-          "title": "Query Params"
-        },
-        "schema": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "description": "Schema name (overrides default)",
-          "title": "Schema"
-        },
-        "schema_contract": {
-          "anyOf": [
-            {
-              "$ref": "#/$defs/SchemaContract"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "description": "Schema contract override for this table"
-        }
-      },
-      "required": [
-        "name",
-        "primary_key"
-      ],
-      "title": "MergeTableEntry",
-      "type": "object"
-    },
-    "ParallelExtractionConfig": {
-      "additionalProperties": false,
-      "description": "Parallel extraction configuration.",
-      "properties": {
-        "enabled": {
-          "default": false,
-          "description": "Enable parallel extraction",
-          "title": "Enabled",
-          "type": "boolean"
-        },
-        "max_workers": {
-          "default": 4,
-          "description": "Maximum concurrent workers",
-          "maximum": 16,
-          "minimum": 1,
-          "title": "Max Workers",
-          "type": "integer"
-        }
-      },
-      "title": "ParallelExtractionConfig",
-      "type": "object"
-    },
-    "PartitionConfig": {
-      "additionalProperties": false,
-      "description": "Table partitioning configuration.",
-      "properties": {
-        "expiration_days": {
-          "anyOf": [
-            {
-              "minimum": 1,
-              "type": "integer"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "description": "Days after which partitions expire (optional)",
-          "title": "Expiration Days"
-        },
-        "field": {
-          "description": "Field to partition by",
-          "title": "Field",
-          "type": "string"
-        },
-        "grain": {
-          "default": "day",
-          "description": "Partition granularity",
-          "enum": [
-            "day",
-            "month",
-            "year"
-          ],
-          "title": "Grain",
-          "type": "string"
-        }
-      },
-      "required": [
-        "field"
-      ],
-      "title": "PartitionConfig",
-      "type": "object"
-    },
-    "SchemaContract": {
-      "additionalProperties": false,
-      "description": "Schema contract configuration for controlling schema evolution.\n\nControls three dimensions of schema evolution at the destination:\n\n1. **tables**: Can new tables be created?\n   - evolve: Allow new tables (recommended for Bronze, needed for first run)\n   - freeze: Block new tables (raises PipelineStepFailed)\n   - discard_row: Drop rows for unknown tables\n   - discard_value: Not applicable for tables dimension\n\n2. **columns**: Can new columns be added to existing tables?\n   - evolve: Allow new columns (flexible, good for development)\n   - freeze: Block new columns (strict production governance)\n   - discard_row: Drop entire row if new column detected\n   - discard_value: Set new column values to NULL, keep row\n\n3. **data_type**: Can column data types change?\n   - evolve: Allow type changes (may cause issues)\n   - freeze: Block type changes (recommended for production)\n   - discard_row: Drop row if type mismatch\n   - discard_value: Set mismatched values to NULL\n\nRecommended Defaults:\n    - Development: tables=evolve, columns=evolve, data_type=evolve\n    - Production: tables=evolve, columns=freeze, data_type=freeze\n\nWhy tables=evolve in production?\n    - First run: Tables don't exist yet, dlt must create them\n    - Child tables: dlt auto-creates nested tables (e.g., orders__items)\n    - New tables: When you add a new table to config\n\nReference: https://dlthub.com/docs/general-usage/schema-contracts\n\nExample YAML:\n    schema_contract:\n      tables: evolve      # Allow table creation\n      columns: freeze     # Block new columns\n      data_type: freeze   # Block type changes",
-      "properties": {
-        "columns": {
-          "$ref": "#/$defs/SchemaEvolutionMode",
-          "default": "freeze",
-          "description": "Control new column addition (evolve, freeze, discard_row, discard_value)"
-        },
-        "data_type": {
-          "$ref": "#/$defs/SchemaEvolutionMode",
-          "default": "freeze",
-          "description": "Control column type changes (evolve, freeze, discard_row, discard_value)"
-        },
-        "tables": {
-          "$ref": "#/$defs/SchemaEvolutionMode",
-          "default": "evolve",
-          "description": "Control new table creation (evolve, freeze, discard_row, discard_value)"
-        }
-      },
-      "title": "SchemaContract",
-      "type": "object"
-    },
-    "SchemaEvolutionMode": {
-      "description": "Schema evolution modes for dlt schema_contract.\n\nReference: https://dlthub.com/docs/general-usage/schema-contracts",
-      "enum": [
-        "evolve",
-        "freeze",
-        "discard_row",
-        "discard_value"
-      ],
-      "title": "SchemaEvolutionMode",
-      "type": "string"
-    },
-    "SnapshotTableEntry": {
-      "additionalProperties": false,
-      "description": "Simplified entry for snapshot (full refresh) tables.\n\nSnapshot tables use:\n    - mode: \"snapshot\" (automatic)\n    - write_disposition: \"replace\" (automatic)\n    - No cursor_field needed\n\nSupports custom_query for complex extractions.",
-      "properties": {
-        "add_load_date": {
-          "anyOf": [
-            {
-              "type": "boolean"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "description": "Override default add_load_date setting",
-          "title": "Add Load Date"
-        },
-        "cluster": {
-          "anyOf": [
-            {
-              "$ref": "#/$defs/ClusterConfig"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "description": "Clustering configuration (overrides default)"
-        },
-        "columns": {
-          "anyOf": [
-            {
-              "items": {
-                "type": "string"
-              },
-              "type": "array"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "description": "Explicit column selection (None = all columns)",
-          "title": "Columns"
-        },
-        "custom_query": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "description": "Custom SQL query instead of table extraction",
-          "title": "Custom Query"
-        },
-        "data_quality": {
-          "anyOf": [
-            {
-              "$ref": "#/$defs/DataQualityConfig"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "description": "Data quality configuration (overrides default)"
-        },
-        "name": {
-          "description": "Table name",
-          "minLength": 1,
-          "title": "Name",
-          "type": "string"
-        },
-        "partition": {
-          "anyOf": [
-            {
-              "$ref": "#/$defs/PartitionConfig"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "description": "Partitioning configuration (overrides default)"
-        },
-        "query_params": {
-          "anyOf": [
-            {
-              "additionalProperties": true,
-              "type": "object"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "description": "Parameters for custom query",
-          "title": "Query Params"
-        },
-        "schema": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "description": "Schema name (overrides default)",
-          "title": "Schema"
-        },
-        "schema_contract": {
-          "anyOf": [
-            {
-              "$ref": "#/$defs/SchemaContract"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "description": "Schema contract override for this table"
-        }
-      },
-      "required": [
-        "name"
-      ],
-      "title": "SnapshotTableEntry",
-      "type": "object"
-    },
-    "TableDefaultsConfig": {
-      "additionalProperties": false,
-      "description": "Shared defaults for grouped table configurations.\n\nThese defaults apply to all tables in snapshot_tables, incremental_tables,\nor merge_tables sections. Individual tables can override any default.",
-      "properties": {
-        "add_load_date": {
-          "default": true,
-          "description": "Inject LOAD_DATE column (default: true)",
-          "title": "Add Load Date",
-          "type": "boolean"
-        },
-        "cluster": {
-          "anyOf": [
-            {
-              "$ref": "#/$defs/ClusterConfig"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "description": "Default clustering configuration"
-        },
-        "data_quality": {
-          "anyOf": [
-            {
-              "$ref": "#/$defs/DataQualityConfig"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "description": "Default data quality configuration"
-        },
-        "partition": {
-          "anyOf": [
-            {
-              "$ref": "#/$defs/PartitionConfig"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "description": "Default partitioning configuration"
-        },
-        "schema": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "description": "Default schema for all tables",
-          "title": "Schema"
-        },
-        "schema_contract": {
-          "anyOf": [
-            {
-              "$ref": "#/$defs/SchemaContract"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "description": "Default schema contract for all tables"
-        }
-      },
-      "title": "TableDefaultsConfig",
-      "type": "object"
-    },
-    "TableResourceConfig": {
-      "additionalProperties": false,
-      "description": "Configuration for a single table to extract.\n\nUsed within ResourceConfig for database sources.\n\nBronze Layer Design:\n    This framework is designed for APPEND-only ingestion to Bronze layer.\n    - Use write_disposition: \"append\" for standard Bronze ingestion\n    - SCD2 and complex merge logic should be handled in dbt (Silver layer)\n    - RecordHash is NOT needed for Bronze append - use it only for Reverse ETL",
-      "properties": {
-        "add_load_date": {
-          "default": true,
-          "description": "Inject LOAD_DATE column with current timestamp at extraction time",
-          "title": "Add Load Date",
-          "type": "boolean"
-        },
-        "cluster": {
-          "anyOf": [
-            {
-              "$ref": "#/$defs/ClusterConfig"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "description": "Clustering configuration"
-        },
-        "columns": {
-          "anyOf": [
-            {
-              "items": {
-                "type": "string"
-              },
-              "type": "array"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "description": "Explicit column selection (None = all columns)",
-          "title": "Columns"
-        },
-        "cursor_field": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "description": "Field for incremental cursor (required if mode=incremental)",
-          "title": "Cursor Field"
-        },
-        "cursor_initial_value": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "integer"
-            },
-            {
-              "type": "number"
-            },
-            {
-              "format": "date-time",
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "description": "Initial cursor value (string for dates, int for IDs, float for decimals)",
-          "title": "Cursor Initial Value"
-        },
-        "custom_query": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "description": "Custom SQL query instead of table name",
-          "title": "Custom Query"
-        },
-        "data_quality": {
-          "anyOf": [
-            {
-              "$ref": "#/$defs/DataQualityConfig"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "description": "Table-level data quality checks"
-        },
-        "mode": {
-          "$ref": "#/$defs/LoadMode",
-          "default": "incremental",
-          "description": "Loading mode (incremental or snapshot)"
-        },
-        "name": {
-          "description": "Table name (preserves original casing)",
-          "minLength": 1,
-          "title": "Name",
-          "type": "string"
-        },
-        "partition": {
-          "anyOf": [
-            {
-              "$ref": "#/$defs/PartitionConfig"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "description": "Partitioning configuration"
-        },
-        "primary_key": {
-          "anyOf": [
-            {
-              "items": {
-                "type": "string"
-              },
-              "type": "array"
-            },
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "description": "Primary key column(s) (required for merge, optional for append)",
-          "title": "Primary Key"
-        },
-        "query_params": {
-          "anyOf": [
-            {
-              "additionalProperties": true,
-              "type": "object"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "description": "Parameters for custom query",
-          "title": "Query Params"
-        },
-        "schema": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "description": "Schema name (e.g., 'SALES' for Oracle)",
-          "title": "Schema"
-        },
-        "schema_contract": {
-          "anyOf": [
-            {
-              "$ref": "#/$defs/SchemaContract"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "description": "Table-level schema contract override. If not specified, uses pipeline-level default."
-        },
-        "write_disposition": {
-          "$ref": "#/$defs/WriteDisposition",
-          "default": "append",
-          "description": "How to write data to destination (append recommended for Bronze layer)"
-        }
-      },
-      "required": [
-        "name"
-      ],
-      "title": "TableResourceConfig",
-      "type": "object"
-    },
-    "WriteDisposition": {
-      "description": "dlt write disposition modes.\n\nReference: https://dlthub.com/docs/general-usage/incremental-loading",
-      "enum": [
-        "append",
-        "replace",
-        "merge"
-      ],
-      "title": "WriteDisposition",
-      "type": "string"
-    }
-  },
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
   "additionalProperties": false,
-  "description": "Resource configuration for database tables.\n\nFile location: configs/resources/{source_name}/{resource_name}.yaml\n\nSupports TWO configuration formats:\n\n1. **Detailed Format** (original): Use `tables` field for full control\n   over each table's configuration. Best for complex requirements.\n\n2. **Grouped Format** (simplified): Use `defaults` + grouped sections\n   (`snapshot_tables`, `incremental_tables`, `merge_tables`) for bulk\n   configuration of 50+ tables with shared settings.\n\n**Table Selection Policy (SECURITY):**\n\nExplicit table list is REQUIRED by default. This framework does NOT allow\n\"reflect all tables\" behavior to prevent accidental ingestion of:\n    - Temporary tables (TMP_*, STAGING_*)\n    - Backup tables (*_BACKUP, *_OLD)\n    - Test data (TEST_*, DEV_*)\n    - System tables (SYS_*, LOG_*)\n\n**Discovery Mode (Opt-In Only):**\n\nIf you need \"all tables\" behavior, explicitly enable `discovery_mode: true`\nand provide `exclude_patterns` for safety. This requires deliberate opt-in\nand forces you to think about exclusions.\n\nNote: The subdirectory name MUST match source.name from the source config.\nYou can use EITHER format, or mix them (grouped + tables for edge cases).\n\nExample (Grouped Format):\n    resource:\n      source_ref: \"oracle_sales_de\"\n      defaults:\n        schema: \"SALES\"\n        add_load_date: true\n      snapshot_tables:\n        - name: \"PRODUCT_CATALOG\"\n        - name: \"REGIONS\"\n      incremental_tables:\n        - name: \"CUSTOMERS\"\n          cursor_field: \"UPDATED_AT\"\n        - name: \"ORDERS\"\n          cursor_field: \"ORDER_DATE\"\n\nExample (Discovery Mode):\n    resource:\n      source_ref: \"oracle_sales_de\"\n      discovery_mode: true\n      schema: \"SALES\"\n      exclude_patterns:\n        - \"^TMP_.*\"\n        - \"^STAGING_.*\"\n        - \".*_BACKUP$\"\n        - \".*_OLD$\"",
   "properties": {
-    "defaults": {
-      "anyOf": [
-        {
-          "$ref": "#/$defs/TableDefaultsConfig"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "default": null,
-      "description": "Shared defaults for all grouped table sections"
-    },
-    "discovery_mode": {
-      "default": false,
-      "description": "Enable discovery mode to reflect all tables in schema. REQUIRES exclude_patterns for safety. Use with caution.",
-      "title": "Discovery Mode",
-      "type": "boolean"
-    },
-    "exclude_patterns": {
-      "anyOf": [
-        {
-          "items": {
-            "type": "string"
+    "resource": {
+      "$defs": {
+        "ClusterConfig": {
+          "additionalProperties": false,
+          "description": "Table clustering configuration.\n\nDestination-Specific Behavior:\n    - Databricks: Uses Liquid Clustering (not ZORDER). Use \"AUTO\" for automatic.\n                 Cannot use with partition on same table.\n    - BigQuery: Uses cluster_by, max 4 fields enforced by BigQuery.\n    - Oracle/MSSQL: Not supported (validation will reject).\n\nNote: Field count validation is done at runtime based on destination type.",
+          "properties": {
+            "fields": {
+              "anyOf": [
+                {
+                  "items": {
+                    "type": "string"
+                  },
+                  "type": "array"
+                },
+                {
+                  "const": "AUTO",
+                  "type": "string"
+                }
+              ],
+              "description": "Fields to cluster by, or 'AUTO' for Databricks auto liquid clustering",
+              "title": "Fields"
+            }
           },
-          "type": "array"
+          "required": [
+            "fields"
+          ],
+          "title": "ClusterConfig",
+          "type": "object"
         },
-        {
-          "type": "null"
-        }
-      ],
-      "default": null,
-      "description": "Regex patterns to exclude tables in discovery mode. Example: ['^TMP_.*', '.*_BACKUP$', '^TEST_.*']",
-      "title": "Exclude Patterns"
-    },
-    "include_views": {
-      "default": false,
-      "description": "Include views in discovery mode (default: false)",
-      "title": "Include Views",
-      "type": "boolean"
-    },
-    "incremental_tables": {
-      "anyOf": [
-        {
-          "items": {
-            "$ref": "#/$defs/IncrementalTableEntry"
+        "DQCheckCustomSql": {
+          "additionalProperties": false,
+          "description": "Custom SQL check configuration.",
+          "properties": {
+            "max_failures": {
+              "default": 0,
+              "description": "Maximum allowed failures (0 = no failures allowed)",
+              "minimum": 0,
+              "title": "Max Failures",
+              "type": "integer"
+            },
+            "query": {
+              "description": "SQL query returning failure count (use {table} placeholder)",
+              "title": "Query",
+              "type": "string"
+            },
+            "severity": {
+              "$ref": "#/$defs/DQSeverity",
+              "default": "error",
+              "description": "Severity level if check fails"
+            },
+            "type": {
+              "const": "custom_sql",
+              "default": "custom_sql",
+              "title": "Type",
+              "type": "string"
+            }
           },
-          "type": "array"
+          "required": [
+            "query"
+          ],
+          "title": "DQCheckCustomSql",
+          "type": "object"
         },
-        {
-          "$ref": "#/$defs/IncrementalGroupConfig"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "default": null,
-      "description": "Incremental tables (mode=incremental, write_disposition=append)",
-      "title": "Incremental Tables"
-    },
-    "merge_tables": {
-      "anyOf": [
-        {
-          "items": {
-            "$ref": "#/$defs/MergeTableEntry"
+        "DQCheckFreshness": {
+          "additionalProperties": false,
+          "description": "Data freshness check configuration.",
+          "properties": {
+            "column": {
+              "description": "Timestamp column to check for freshness",
+              "title": "Column",
+              "type": "string"
+            },
+            "max_age_hours": {
+              "description": "Maximum allowed age in hours",
+              "minimum": 1,
+              "title": "Max Age Hours",
+              "type": "integer"
+            },
+            "severity": {
+              "$ref": "#/$defs/DQSeverity",
+              "default": "error",
+              "description": "Severity level if check fails"
+            },
+            "type": {
+              "const": "freshness",
+              "default": "freshness",
+              "title": "Type",
+              "type": "string"
+            }
           },
-          "type": "array"
+          "required": [
+            "column",
+            "max_age_hours"
+          ],
+          "title": "DQCheckFreshness",
+          "type": "object"
         },
-        {
-          "type": "null"
-        }
-      ],
-      "default": null,
-      "description": "Merge tables (write_disposition=merge, for Reverse ETL)",
-      "title": "Merge Tables"
-    },
-    "parallel_extraction": {
-      "$ref": "#/$defs/ParallelExtractionConfig",
-      "description": "Parallel extraction settings"
-    },
-    "snapshot_tables": {
-      "anyOf": [
-        {
-          "items": {
-            "$ref": "#/$defs/SnapshotTableEntry"
+        "DQCheckNotNull": {
+          "additionalProperties": false,
+          "description": "Not null check configuration.",
+          "properties": {
+            "columns": {
+              "description": "Columns to check for null values",
+              "items": {
+                "type": "string"
+              },
+              "minItems": 1,
+              "title": "Columns",
+              "type": "array"
+            },
+            "severity": {
+              "$ref": "#/$defs/DQSeverity",
+              "default": "error",
+              "description": "Severity level if check fails"
+            },
+            "type": {
+              "const": "not_null",
+              "default": "not_null",
+              "title": "Type",
+              "type": "string"
+            }
           },
-          "type": "array"
+          "required": [
+            "columns"
+          ],
+          "title": "DQCheckNotNull",
+          "type": "object"
         },
-        {
-          "type": "null"
-        }
-      ],
-      "default": null,
-      "description": "Snapshot tables (mode=snapshot, write_disposition=replace)",
-      "title": "Snapshot Tables"
-    },
-    "source_ref": {
-      "description": "Reference to source config name",
-      "title": "Source Ref",
-      "type": "string"
-    },
-    "tables": {
-      "anyOf": [
-        {
-          "items": {
-            "$ref": "#/$defs/TableResourceConfig"
+        "DQCheckRange": {
+          "additionalProperties": false,
+          "description": "Value range check configuration.",
+          "properties": {
+            "column": {
+              "description": "Column to check for value range",
+              "title": "Column",
+              "type": "string"
+            },
+            "max_value": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Maximum allowed value (inclusive)",
+              "title": "Max Value"
+            },
+            "min_value": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Minimum allowed value (inclusive)",
+              "title": "Min Value"
+            },
+            "severity": {
+              "$ref": "#/$defs/DQSeverity",
+              "default": "error",
+              "description": "Severity level if check fails"
+            },
+            "type": {
+              "const": "range",
+              "default": "range",
+              "title": "Type",
+              "type": "string"
+            }
           },
-          "type": "array"
+          "required": [
+            "column"
+          ],
+          "title": "DQCheckRange",
+          "type": "object"
         },
-        {
-          "type": "null"
+        "DQCheckRegex": {
+          "additionalProperties": false,
+          "description": "Regex pattern check configuration.",
+          "properties": {
+            "column": {
+              "description": "Column to validate against pattern",
+              "title": "Column",
+              "type": "string"
+            },
+            "pattern": {
+              "description": "Regular expression pattern",
+              "title": "Pattern",
+              "type": "string"
+            },
+            "severity": {
+              "$ref": "#/$defs/DQSeverity",
+              "default": "warning",
+              "description": "Severity level if check fails"
+            },
+            "type": {
+              "const": "regex",
+              "default": "regex",
+              "title": "Type",
+              "type": "string"
+            }
+          },
+          "required": [
+            "column",
+            "pattern"
+          ],
+          "title": "DQCheckRegex",
+          "type": "object"
+        },
+        "DQCheckUnique": {
+          "additionalProperties": false,
+          "description": "Uniqueness check configuration.",
+          "properties": {
+            "columns": {
+              "description": "Columns to check for uniqueness (compound key if multiple)",
+              "items": {
+                "type": "string"
+              },
+              "minItems": 1,
+              "title": "Columns",
+              "type": "array"
+            },
+            "severity": {
+              "$ref": "#/$defs/DQSeverity",
+              "default": "error",
+              "description": "Severity level if check fails"
+            },
+            "type": {
+              "const": "unique",
+              "default": "unique",
+              "title": "Type",
+              "type": "string"
+            }
+          },
+          "required": [
+            "columns"
+          ],
+          "title": "DQCheckUnique",
+          "type": "object"
+        },
+        "DQSeverity": {
+          "description": "Data quality check severity levels.",
+          "enum": [
+            "error",
+            "warning"
+          ],
+          "title": "DQSeverity",
+          "type": "string"
+        },
+        "DataQualityConfig": {
+          "additionalProperties": false,
+          "description": "Data quality configuration for a table or pipeline.",
+          "properties": {
+            "checks": {
+              "description": "List of data quality checks to run",
+              "items": {
+                "discriminator": {
+                  "mapping": {
+                    "custom_sql": "#/$defs/DQCheckCustomSql",
+                    "freshness": "#/$defs/DQCheckFreshness",
+                    "not_null": "#/$defs/DQCheckNotNull",
+                    "range": "#/$defs/DQCheckRange",
+                    "regex": "#/$defs/DQCheckRegex",
+                    "unique": "#/$defs/DQCheckUnique"
+                  },
+                  "propertyName": "type"
+                },
+                "oneOf": [
+                  {
+                    "$ref": "#/$defs/DQCheckNotNull"
+                  },
+                  {
+                    "$ref": "#/$defs/DQCheckUnique"
+                  },
+                  {
+                    "$ref": "#/$defs/DQCheckRegex"
+                  },
+                  {
+                    "$ref": "#/$defs/DQCheckRange"
+                  },
+                  {
+                    "$ref": "#/$defs/DQCheckFreshness"
+                  },
+                  {
+                    "$ref": "#/$defs/DQCheckCustomSql"
+                  }
+                ]
+              },
+              "title": "Checks",
+              "type": "array"
+            },
+            "enabled": {
+              "default": true,
+              "description": "Enable data quality checks",
+              "title": "Enabled",
+              "type": "boolean"
+            },
+            "fail_on_error": {
+              "default": false,
+              "description": "Fail pipeline if any DQ check fails with ERROR severity",
+              "title": "Fail On Error",
+              "type": "boolean"
+            }
+          },
+          "title": "DataQualityConfig",
+          "type": "object"
+        },
+        "IncrementalGroupConfig": {
+          "additionalProperties": false,
+          "description": "Group configuration for incremental tables with shared cursor_field default.\n\nUse when multiple tables share the same cursor_field pattern.",
+          "properties": {
+            "default_cursor_field": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Default cursor field for all tables in this group",
+              "title": "Default Cursor Field"
+            },
+            "default_cursor_initial_value": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Default initial cursor value",
+              "title": "Default Cursor Initial Value"
+            },
+            "tables": {
+              "description": "List of incremental tables",
+              "items": {
+                "$ref": "#/$defs/IncrementalTableEntry"
+              },
+              "minItems": 1,
+              "title": "Tables",
+              "type": "array"
+            }
+          },
+          "required": [
+            "tables"
+          ],
+          "title": "IncrementalGroupConfig",
+          "type": "object"
+        },
+        "IncrementalTableEntry": {
+          "additionalProperties": false,
+          "description": "Simplified entry for incremental (append) tables.\n\nIncremental tables use:\n    - mode: \"incremental\" (automatic)\n    - write_disposition: \"append\" (automatic, Bronze layer pattern)\n    - cursor_field: Required for tracking changes\n\nThis is the recommended pattern for Bronze layer ingestion.\nSupports custom_query for complex incremental extractions.",
+          "properties": {
+            "add_load_date": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Override default add_load_date setting",
+              "title": "Add Load Date"
+            },
+            "cluster": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/ClusterConfig"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Clustering configuration (overrides default)"
+            },
+            "columns": {
+              "anyOf": [
+                {
+                  "items": {
+                    "type": "string"
+                  },
+                  "type": "array"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Explicit column selection (None = all columns)",
+              "title": "Columns"
+            },
+            "cursor_field": {
+              "description": "Field for incremental cursor (required)",
+              "title": "Cursor Field",
+              "type": "string"
+            },
+            "cursor_initial_value": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "number"
+                },
+                {
+                  "format": "date-time",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Initial cursor value (string for dates, int for IDs, float for decimals)",
+              "title": "Cursor Initial Value"
+            },
+            "custom_query": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Custom SQL query instead of table extraction",
+              "title": "Custom Query"
+            },
+            "data_quality": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/DataQualityConfig"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Data quality configuration (overrides default)"
+            },
+            "name": {
+              "description": "Table name",
+              "minLength": 1,
+              "title": "Name",
+              "type": "string"
+            },
+            "partition": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/PartitionConfig"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Partitioning configuration (overrides default)"
+            },
+            "primary_key": {
+              "anyOf": [
+                {
+                  "items": {
+                    "type": "string"
+                  },
+                  "type": "array"
+                },
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Primary key column(s) - optional for append, useful for dbt dedup",
+              "title": "Primary Key"
+            },
+            "query_params": {
+              "anyOf": [
+                {
+                  "additionalProperties": true,
+                  "type": "object"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Parameters for custom query",
+              "title": "Query Params"
+            },
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Schema name (overrides default)",
+              "title": "Schema"
+            },
+            "schema_contract": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/SchemaContract"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Schema contract override for this table"
+            }
+          },
+          "required": [
+            "name",
+            "cursor_field"
+          ],
+          "title": "IncrementalTableEntry",
+          "type": "object"
+        },
+        "LoadMode": {
+          "description": "Table loading mode.",
+          "enum": [
+            "incremental",
+            "snapshot"
+          ],
+          "title": "LoadMode",
+          "type": "string"
+        },
+        "MergeTableEntry": {
+          "additionalProperties": false,
+          "description": "Simplified entry for merge (upsert) tables.\n\nMerge tables use:\n    - mode: \"incremental\" (automatic)\n    - write_disposition: \"merge\" (automatic)\n    - primary_key: Required for merge operation\n\nUse Cases:\n    - Reverse ETL (pushing data back to sources)\n    - Dimension tables requiring exact state\n    - NOT recommended for Bronze layer (use append instead)\n\nNote: This is planned for Phase 2 (Reverse ETL support).\nSupports custom_query for complex merge extractions.",
+          "properties": {
+            "add_load_date": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Override default add_load_date setting",
+              "title": "Add Load Date"
+            },
+            "cluster": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/ClusterConfig"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Clustering configuration (overrides default)"
+            },
+            "columns": {
+              "anyOf": [
+                {
+                  "items": {
+                    "type": "string"
+                  },
+                  "type": "array"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Explicit column selection (None = all columns)",
+              "title": "Columns"
+            },
+            "cursor_field": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Optional cursor field for incremental merge",
+              "title": "Cursor Field"
+            },
+            "cursor_initial_value": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Initial cursor value for first run",
+              "title": "Cursor Initial Value"
+            },
+            "custom_query": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Custom SQL query instead of table extraction",
+              "title": "Custom Query"
+            },
+            "data_quality": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/DataQualityConfig"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Data quality configuration (overrides default)"
+            },
+            "name": {
+              "description": "Table name",
+              "minLength": 1,
+              "title": "Name",
+              "type": "string"
+            },
+            "partition": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/PartitionConfig"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Partitioning configuration (overrides default)"
+            },
+            "primary_key": {
+              "anyOf": [
+                {
+                  "items": {
+                    "type": "string"
+                  },
+                  "type": "array"
+                },
+                {
+                  "type": "string"
+                }
+              ],
+              "description": "Primary key column(s) - required for merge",
+              "title": "Primary Key"
+            },
+            "query_params": {
+              "anyOf": [
+                {
+                  "additionalProperties": true,
+                  "type": "object"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Parameters for custom query",
+              "title": "Query Params"
+            },
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Schema name (overrides default)",
+              "title": "Schema"
+            },
+            "schema_contract": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/SchemaContract"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Schema contract override for this table"
+            }
+          },
+          "required": [
+            "name",
+            "primary_key"
+          ],
+          "title": "MergeTableEntry",
+          "type": "object"
+        },
+        "ParallelExtractionConfig": {
+          "additionalProperties": false,
+          "description": "Parallel extraction configuration.",
+          "properties": {
+            "enabled": {
+              "default": false,
+              "description": "Enable parallel extraction",
+              "title": "Enabled",
+              "type": "boolean"
+            },
+            "max_workers": {
+              "default": 4,
+              "description": "Maximum concurrent workers",
+              "maximum": 16,
+              "minimum": 1,
+              "title": "Max Workers",
+              "type": "integer"
+            }
+          },
+          "title": "ParallelExtractionConfig",
+          "type": "object"
+        },
+        "PartitionConfig": {
+          "additionalProperties": false,
+          "description": "Table partitioning configuration.",
+          "properties": {
+            "expiration_days": {
+              "anyOf": [
+                {
+                  "minimum": 1,
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Days after which partitions expire (optional)",
+              "title": "Expiration Days"
+            },
+            "field": {
+              "description": "Field to partition by",
+              "title": "Field",
+              "type": "string"
+            },
+            "grain": {
+              "default": "day",
+              "description": "Partition granularity",
+              "enum": [
+                "day",
+                "month",
+                "year"
+              ],
+              "title": "Grain",
+              "type": "string"
+            }
+          },
+          "required": [
+            "field"
+          ],
+          "title": "PartitionConfig",
+          "type": "object"
+        },
+        "SchemaContract": {
+          "additionalProperties": false,
+          "description": "Schema contract configuration for controlling schema evolution.\n\nControls three dimensions of schema evolution at the destination:\n\n1. **tables**: Can new tables be created?\n   - evolve: Allow new tables (recommended for Bronze, needed for first run)\n   - freeze: Block new tables (raises PipelineStepFailed)\n   - discard_row: Drop rows for unknown tables\n   - discard_value: Not applicable for tables dimension\n\n2. **columns**: Can new columns be added to existing tables?\n   - evolve: Allow new columns (flexible, good for development)\n   - freeze: Block new columns (strict production governance)\n   - discard_row: Drop entire row if new column detected\n   - discard_value: Set new column values to NULL, keep row\n\n3. **data_type**: Can column data types change?\n   - evolve: Allow type changes (may cause issues)\n   - freeze: Block type changes (recommended for production)\n   - discard_row: Drop row if type mismatch\n   - discard_value: Set mismatched values to NULL\n\nRecommended Defaults:\n    - Development: tables=evolve, columns=evolve, data_type=evolve\n    - Production: tables=evolve, columns=freeze, data_type=freeze\n\nWhy tables=evolve in production?\n    - First run: Tables don't exist yet, dlt must create them\n    - Child tables: dlt auto-creates nested tables (e.g., orders__items)\n    - New tables: When you add a new table to config\n\nReference: https://dlthub.com/docs/general-usage/schema-contracts\n\nExample YAML:\n    schema_contract:\n      tables: evolve      # Allow table creation\n      columns: freeze     # Block new columns\n      data_type: freeze   # Block type changes",
+          "properties": {
+            "columns": {
+              "$ref": "#/$defs/SchemaEvolutionMode",
+              "default": "freeze",
+              "description": "Control new column addition (evolve, freeze, discard_row, discard_value)"
+            },
+            "data_type": {
+              "$ref": "#/$defs/SchemaEvolutionMode",
+              "default": "freeze",
+              "description": "Control column type changes (evolve, freeze, discard_row, discard_value)"
+            },
+            "tables": {
+              "$ref": "#/$defs/SchemaEvolutionMode",
+              "default": "evolve",
+              "description": "Control new table creation (evolve, freeze, discard_row, discard_value)"
+            }
+          },
+          "title": "SchemaContract",
+          "type": "object"
+        },
+        "SchemaEvolutionMode": {
+          "description": "Schema evolution modes for dlt schema_contract.\n\nReference: https://dlthub.com/docs/general-usage/schema-contracts",
+          "enum": [
+            "evolve",
+            "freeze",
+            "discard_row",
+            "discard_value"
+          ],
+          "title": "SchemaEvolutionMode",
+          "type": "string"
+        },
+        "SnapshotTableEntry": {
+          "additionalProperties": false,
+          "description": "Simplified entry for snapshot (full refresh) tables.\n\nSnapshot tables use:\n    - mode: \"snapshot\" (automatic)\n    - write_disposition: \"replace\" (automatic)\n    - No cursor_field needed\n\nSupports custom_query for complex extractions.",
+          "properties": {
+            "add_load_date": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Override default add_load_date setting",
+              "title": "Add Load Date"
+            },
+            "cluster": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/ClusterConfig"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Clustering configuration (overrides default)"
+            },
+            "columns": {
+              "anyOf": [
+                {
+                  "items": {
+                    "type": "string"
+                  },
+                  "type": "array"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Explicit column selection (None = all columns)",
+              "title": "Columns"
+            },
+            "custom_query": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Custom SQL query instead of table extraction",
+              "title": "Custom Query"
+            },
+            "data_quality": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/DataQualityConfig"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Data quality configuration (overrides default)"
+            },
+            "name": {
+              "description": "Table name",
+              "minLength": 1,
+              "title": "Name",
+              "type": "string"
+            },
+            "partition": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/PartitionConfig"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Partitioning configuration (overrides default)"
+            },
+            "query_params": {
+              "anyOf": [
+                {
+                  "additionalProperties": true,
+                  "type": "object"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Parameters for custom query",
+              "title": "Query Params"
+            },
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Schema name (overrides default)",
+              "title": "Schema"
+            },
+            "schema_contract": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/SchemaContract"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Schema contract override for this table"
+            }
+          },
+          "required": [
+            "name"
+          ],
+          "title": "SnapshotTableEntry",
+          "type": "object"
+        },
+        "TableDefaultsConfig": {
+          "additionalProperties": false,
+          "description": "Shared defaults for grouped table configurations.\n\nThese defaults apply to all tables in snapshot_tables, incremental_tables,\nor merge_tables sections. Individual tables can override any default.",
+          "properties": {
+            "add_load_date": {
+              "default": true,
+              "description": "Inject LOAD_DATE column (default: true)",
+              "title": "Add Load Date",
+              "type": "boolean"
+            },
+            "cluster": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/ClusterConfig"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Default clustering configuration"
+            },
+            "data_quality": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/DataQualityConfig"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Default data quality configuration"
+            },
+            "partition": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/PartitionConfig"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Default partitioning configuration"
+            },
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Default schema for all tables",
+              "title": "Schema"
+            },
+            "schema_contract": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/SchemaContract"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Default schema contract for all tables"
+            }
+          },
+          "title": "TableDefaultsConfig",
+          "type": "object"
+        },
+        "TableResourceConfig": {
+          "additionalProperties": false,
+          "description": "Configuration for a single table to extract.\n\nUsed within ResourceConfig for database sources.\n\nBronze Layer Design:\n    This framework is designed for APPEND-only ingestion to Bronze layer.\n    - Use write_disposition: \"append\" for standard Bronze ingestion\n    - SCD2 and complex merge logic should be handled in dbt (Silver layer)\n    - RecordHash is NOT needed for Bronze append - use it only for Reverse ETL",
+          "properties": {
+            "add_load_date": {
+              "default": true,
+              "description": "Inject LOAD_DATE column with current timestamp at extraction time",
+              "title": "Add Load Date",
+              "type": "boolean"
+            },
+            "cluster": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/ClusterConfig"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Clustering configuration"
+            },
+            "columns": {
+              "anyOf": [
+                {
+                  "items": {
+                    "type": "string"
+                  },
+                  "type": "array"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Explicit column selection (None = all columns)",
+              "title": "Columns"
+            },
+            "cursor_field": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Field for incremental cursor (required if mode=incremental)",
+              "title": "Cursor Field"
+            },
+            "cursor_initial_value": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "number"
+                },
+                {
+                  "format": "date-time",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Initial cursor value (string for dates, int for IDs, float for decimals)",
+              "title": "Cursor Initial Value"
+            },
+            "custom_query": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Custom SQL query instead of table name",
+              "title": "Custom Query"
+            },
+            "data_quality": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/DataQualityConfig"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Table-level data quality checks"
+            },
+            "mode": {
+              "$ref": "#/$defs/LoadMode",
+              "default": "incremental",
+              "description": "Loading mode (incremental or snapshot)"
+            },
+            "name": {
+              "description": "Table name (preserves original casing)",
+              "minLength": 1,
+              "title": "Name",
+              "type": "string"
+            },
+            "partition": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/PartitionConfig"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Partitioning configuration"
+            },
+            "primary_key": {
+              "anyOf": [
+                {
+                  "items": {
+                    "type": "string"
+                  },
+                  "type": "array"
+                },
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Primary key column(s) (required for merge, optional for append)",
+              "title": "Primary Key"
+            },
+            "query_params": {
+              "anyOf": [
+                {
+                  "additionalProperties": true,
+                  "type": "object"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Parameters for custom query",
+              "title": "Query Params"
+            },
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Schema name (e.g., 'SALES' for Oracle)",
+              "title": "Schema"
+            },
+            "schema_contract": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/SchemaContract"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Table-level schema contract override. If not specified, uses pipeline-level default."
+            },
+            "write_disposition": {
+              "$ref": "#/$defs/WriteDisposition",
+              "default": "append",
+              "description": "How to write data to destination (append recommended for Bronze layer)"
+            }
+          },
+          "required": [
+            "name"
+          ],
+          "title": "TableResourceConfig",
+          "type": "object"
+        },
+        "WriteDisposition": {
+          "description": "dlt write disposition modes.\n\nReference: https://dlthub.com/docs/general-usage/incremental-loading",
+          "enum": [
+            "append",
+            "replace",
+            "merge"
+          ],
+          "title": "WriteDisposition",
+          "type": "string"
         }
+      },
+      "additionalProperties": false,
+      "description": "Resource configuration for database tables.\n\nFile location: configs/resources/{source_name}/{resource_name}.yaml\n\nSupports TWO configuration formats:\n\n1. **Detailed Format** (original): Use `tables` field for full control\n   over each table's configuration. Best for complex requirements.\n\n2. **Grouped Format** (simplified): Use `defaults` + grouped sections\n   (`snapshot_tables`, `incremental_tables`, `merge_tables`) for bulk\n   configuration of 50+ tables with shared settings.\n\n**Table Selection Policy (SECURITY):**\n\nExplicit table list is REQUIRED by default. This framework does NOT allow\n\"reflect all tables\" behavior to prevent accidental ingestion of:\n    - Temporary tables (TMP_*, STAGING_*)\n    - Backup tables (*_BACKUP, *_OLD)\n    - Test data (TEST_*, DEV_*)\n    - System tables (SYS_*, LOG_*)\n\n**Discovery Mode (Opt-In Only):**\n\nIf you need \"all tables\" behavior, explicitly enable `discovery_mode: true`\nand provide `exclude_patterns` for safety. This requires deliberate opt-in\nand forces you to think about exclusions.\n\nNote: The subdirectory name MUST match source.name from the source config.\nYou can use EITHER format, or mix them (grouped + tables for edge cases).\n\nExample (Grouped Format):\n    resource:\n      source_ref: \"oracle_sales_de\"\n      defaults:\n        schema: \"SALES\"\n        add_load_date: true\n      snapshot_tables:\n        - name: \"PRODUCT_CATALOG\"\n        - name: \"REGIONS\"\n      incremental_tables:\n        - name: \"CUSTOMERS\"\n          cursor_field: \"UPDATED_AT\"\n        - name: \"ORDERS\"\n          cursor_field: \"ORDER_DATE\"\n\nExample (Discovery Mode):\n    resource:\n      source_ref: \"oracle_sales_de\"\n      discovery_mode: true\n      schema: \"SALES\"\n      exclude_patterns:\n        - \"^TMP_.*\"\n        - \"^STAGING_.*\"\n        - \".*_BACKUP$\"\n        - \".*_OLD$\"",
+      "properties": {
+        "defaults": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/TableDefaultsConfig"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Shared defaults for all grouped table sections"
+        },
+        "discovery_mode": {
+          "default": false,
+          "description": "Enable discovery mode to reflect all tables in schema. REQUIRES exclude_patterns for safety. Use with caution.",
+          "title": "Discovery Mode",
+          "type": "boolean"
+        },
+        "exclude_patterns": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Regex patterns to exclude tables in discovery mode. Example: ['^TMP_.*', '.*_BACKUP$', '^TEST_.*']",
+          "title": "Exclude Patterns"
+        },
+        "include_views": {
+          "default": false,
+          "description": "Include views in discovery mode (default: false)",
+          "title": "Include Views",
+          "type": "boolean"
+        },
+        "incremental_tables": {
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/$defs/IncrementalTableEntry"
+              },
+              "type": "array"
+            },
+            {
+              "$ref": "#/$defs/IncrementalGroupConfig"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Incremental tables (mode=incremental, write_disposition=append)",
+          "title": "Incremental Tables"
+        },
+        "merge_tables": {
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/$defs/MergeTableEntry"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Merge tables (write_disposition=merge, for Reverse ETL)",
+          "title": "Merge Tables"
+        },
+        "parallel_extraction": {
+          "$ref": "#/$defs/ParallelExtractionConfig",
+          "description": "Parallel extraction settings"
+        },
+        "snapshot_tables": {
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/$defs/SnapshotTableEntry"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Snapshot tables (mode=snapshot, write_disposition=replace)",
+          "title": "Snapshot Tables"
+        },
+        "source_ref": {
+          "description": "Reference to source config name",
+          "title": "Source Ref",
+          "type": "string"
+        },
+        "tables": {
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/$defs/TableResourceConfig"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Detailed table configs (original format, full control)",
+          "title": "Tables"
+        },
+        "type": {
+          "const": "tables",
+          "default": "tables",
+          "description": "Resource type",
+          "title": "Type",
+          "type": "string"
+        }
+      },
+      "required": [
+        "source_ref"
       ],
-      "default": null,
-      "description": "Detailed table configs (original format, full control)",
-      "title": "Tables"
-    },
-    "type": {
-      "const": "tables",
-      "default": "tables",
-      "description": "Resource type",
-      "title": "Type",
-      "type": "string"
+      "title": "ResourceConfig",
+      "type": "object"
     }
   },
   "required": [
-    "source_ref"
+    "resource"
   ],
-  "title": "ResourceConfig",
   "type": "object"
 }
