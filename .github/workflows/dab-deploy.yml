@@ -17,6 +17,16 @@ on:
         required: false
         type: boolean
         default: false
+      configs_source_path:
+        description: "Local path (relative to bundle_root) of config files to upload to Volume. Leave empty to skip."
+        required: false
+        type: string
+        default: ""
+      volume_configs_path:
+        description: "UC Volume destination path (e.g. /Volumes/catalog/schema/volume/configs). Leave empty to skip."
+        required: false
+        type: string
+        default: ""
     secrets:
       DATABRICKS_HOST:
         required: true
@@ -50,3 +60,13 @@ jobs:
         working-directory: ${{ inputs.bundle_root }}
         run: |
           databricks bundle deploy -t "${{ inputs.target }}"
+
+      - name: Upload configs to UC Volume
+        if: ${{ inputs.deploy && inputs.configs_source_path != '' && inputs.volume_configs_path != '' }}
+        working-directory: ${{ inputs.bundle_root }}
+        run: |
+          echo "Uploading configs from ${{ inputs.configs_source_path }} to dbfs:${{ inputs.volume_configs_path }}"
+          databricks fs cp --recursive --overwrite \
+            "${{ inputs.configs_source_path }}" \
+            "dbfs:${{ inputs.volume_configs_path }}"
+          echo "Config upload complete."
