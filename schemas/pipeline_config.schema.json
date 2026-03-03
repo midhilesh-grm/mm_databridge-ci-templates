@@ -1,915 +1,915 @@
 {
+  "$defs": {
+    "AuditConfig": {
+      "additionalProperties": false,
+      "description": "Audit logging configuration.",
+      "properties": {
+        "catalog": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Catalog for audit table (defaults to destination catalog)",
+          "title": "Catalog"
+        },
+        "enabled": {
+          "default": true,
+          "description": "Enable audit logging to Delta table",
+          "title": "Enabled",
+          "type": "boolean"
+        },
+        "schema": {
+          "default": "audit_schema",
+          "description": "Schema for audit tables",
+          "title": "Schema",
+          "type": "string"
+        },
+        "table": {
+          "default": "pipeline_runs",
+          "description": "Table name for pipeline run logs",
+          "title": "Table",
+          "type": "string"
+        }
+      },
+      "title": "AuditConfig",
+      "type": "object"
+    },
+    "CheckpointConfig": {
+      "additionalProperties": false,
+      "description": "Checkpoint configuration for pipeline resume capability.",
+      "properties": {
+        "enabled": {
+          "default": true,
+          "description": "Enable checkpointing for resume capability",
+          "title": "Enabled",
+          "type": "boolean"
+        },
+        "save_after_each_resource": {
+          "default": true,
+          "description": "Save checkpoint after each resource completes",
+          "title": "Save After Each Resource",
+          "type": "boolean"
+        }
+      },
+      "title": "CheckpointConfig",
+      "type": "object"
+    },
+    "ClusterConfig": {
+      "additionalProperties": false,
+      "description": "Table clustering configuration.\n\nDestination-Specific Behavior:\n    - Databricks: Uses Liquid Clustering (not ZORDER). Use \"AUTO\" for automatic.\n                 Cannot use with partition on same table.\n    - BigQuery: Uses cluster_by, max 4 fields enforced by BigQuery.\n    - Oracle/MSSQL: Not supported (validation will reject).\n\nNote: Field count validation is done at runtime based on destination type.",
+      "properties": {
+        "fields": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "const": "AUTO",
+              "type": "string"
+            }
+          ],
+          "description": "Fields to cluster by, or 'AUTO' for Databricks auto liquid clustering",
+          "title": "Fields"
+        }
+      },
+      "required": [
+        "fields"
+      ],
+      "title": "ClusterConfig",
+      "type": "object"
+    },
+    "DatabaseDestinationConfig": {
+      "additionalProperties": false,
+      "description": "Database/DWH destination configuration.\n\nSupports Databricks Unity Catalog and BigQuery.\nReference: https://dlthub.com/docs/dlt-ecosystem/destinations/databricks",
+      "properties": {
+        "catalog": {
+          "description": "Unity Catalog name (Databricks) or project ID (BigQuery)",
+          "title": "Catalog",
+          "type": "string"
+        },
+        "schema": {
+          "description": "Schema/dataset name (use pattern: raw_{source_name})",
+          "title": "Schema",
+          "type": "string"
+        },
+        "staging": {
+          "$ref": "#/$defs/StagingConfig",
+          "description": "Staging configuration"
+        },
+        "type": {
+          "default": "databricks",
+          "description": "Destination type (databricks or bigquery)",
+          "enum": [
+            "databricks",
+            "bigquery"
+          ],
+          "title": "Type",
+          "type": "string"
+        }
+      },
+      "required": [
+        "catalog",
+        "schema"
+      ],
+      "title": "DatabaseDestinationConfig",
+      "type": "object"
+    },
+    "DateGranularity": {
+      "description": "Date granularity for folder partitioning.\n\nBased on GRM Germany FileRepositoryDateGranularity pattern.",
+      "enum": [
+        "year",
+        "year_month",
+        "day",
+        "hour"
+      ],
+      "title": "DateGranularity",
+      "type": "string"
+    },
+    "DuckDBDestinationConfig": {
+      "additionalProperties": false,
+      "description": "DuckDB destination configuration for local testing.\n\nDuckDB is an in-process OLAP database perfect for local development\nand CI/CD testing without requiring cloud credentials.\n\nUsage:\n    # In-memory database (ephemeral, lost after process ends)\n    destination:\n      type: \"duckdb\"\n      database: \":memory:\"\n      schema: \"main\"\n    \n    # Persistent file (survives process restart)\n    destination:\n      type: \"duckdb\"\n      database: \"test_output.duckdb\"\n      schema: \"test_data\"\n\nReference: https://dlthub.com/docs/dlt-ecosystem/destinations/duckdb",
+      "properties": {
+        "database": {
+          "description": "DuckDB file path or ':memory:' for in-memory database",
+          "title": "Database",
+          "type": "string"
+        },
+        "schema": {
+          "default": "main",
+          "description": "Schema name (default: 'main')",
+          "title": "Schema",
+          "type": "string"
+        },
+        "type": {
+          "const": "duckdb",
+          "default": "duckdb",
+          "title": "Type",
+          "type": "string"
+        }
+      },
+      "required": [
+        "database"
+      ],
+      "title": "DuckDBDestinationConfig",
+      "type": "object"
+    },
+    "FileCompression": {
+      "description": "Supported compression types for file output.",
+      "enum": [
+        "snappy",
+        "gzip",
+        "lz4",
+        "zstd",
+        "none"
+      ],
+      "title": "FileCompression",
+      "type": "string"
+    },
+    "FileFormat": {
+      "description": "Supported file formats for filesystem source/destination.\n\ndlt NATIVE READERS:\n    - CSV:     read_csv() via pandas, or read_csv_duckdb() for better performance\n    - PARQUET: read_parquet() via pyarrow\n    - JSONL:   read_jsonl() - line-delimited JSON\n\nFRAMEWORK-PROVIDED TRANSFORMERS:\n    - JSON:  Single JSON files - framework provides read_json() transformer\n\nREQUIRES CUSTOM TRANSFORMERS (contact central team):\n    - AVRO:  Apache Avro format (requires fastavro)\n    - XLSX:  Excel files (requires openpyxl)\n\nPERFORMANCE NOTES:\n    - Use read_csv_duckdb() instead of read_csv() for better CSV performance\n    - Set use_pyarrow=True for Parquet/CSV to enable zero-copy Arrow format\n    - Increase chunk_size for large files (10,000+ recommended for production)",
+      "enum": [
+        "parquet",
+        "csv",
+        "jsonl",
+        "json",
+        "avro"
+      ],
+      "title": "FileFormat",
+      "type": "string"
+    },
+    "FilesystemConnectionConfig": {
+      "additionalProperties": false,
+      "description": "Filesystem connection configuration.\n\nSupports multiple protocols: local, Azure ADLS, S3, GCS, SFTP.",
+      "properties": {
+        "account_name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Storage account name (Azure) or access key ID (AWS)",
+          "title": "Account Name"
+        },
+        "bucket": {
+          "description": "Container/bucket name (e.g., 'databridge-landing')",
+          "title": "Bucket",
+          "type": "string"
+        },
+        "credentials": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Credentials reference (e.g., '${secrets.azure_storage_sas}')",
+          "title": "Credentials"
+        },
+        "host": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "SFTP host (required for sftp protocol)",
+          "title": "Host"
+        },
+        "port": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "SFTP port (default: 22)",
+          "title": "Port"
+        },
+        "protocol": {
+          "$ref": "#/$defs/FilesystemProtocol",
+          "default": "az",
+          "description": "Filesystem protocol (az, s3, gs, file, sftp)"
+        },
+        "username": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "SFTP username",
+          "title": "Username"
+        }
+      },
+      "required": [
+        "bucket"
+      ],
+      "title": "FilesystemConnectionConfig",
+      "type": "object"
+    },
+    "FilesystemDestinationConfig": {
+      "additionalProperties": false,
+      "description": "Filesystem destination configuration for writing to partitioned folders.\n\nUse cases:\n    - Data lake staging before DWH load\n    - Cross-system data exchange\n    - Backup/archive to cloud storage\n\nPartition/Cluster Mapping:\n    - partition.field \u2192 Folder structure based on date_granularity\n    - cluster.fields \u2192 File-level row sorting within partitions",
+      "properties": {
+        "cluster": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ClusterConfig"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Cluster config (fields map to file-level sorting)"
+        },
+        "connection": {
+          "$ref": "#/$defs/FilesystemConnectionConfig",
+          "description": "Filesystem connection configuration"
+        },
+        "file_options": {
+          "$ref": "#/$defs/FilesystemFileOptionsConfig",
+          "description": "File format options"
+        },
+        "partition": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PartitionConfig"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Partition config (field maps to folder structure)"
+        },
+        "path": {
+          "$ref": "#/$defs/FilesystemPathConfig",
+          "description": "Path and partitioning configuration"
+        },
+        "type": {
+          "const": "filesystem",
+          "default": "filesystem",
+          "title": "Type",
+          "type": "string"
+        }
+      },
+      "required": [
+        "connection",
+        "path"
+      ],
+      "title": "FilesystemDestinationConfig",
+      "type": "object"
+    },
+    "FilesystemFileOptionsConfig": {
+      "additionalProperties": false,
+      "description": "File format, compression, and performance options for filesystem operations.\n\nNote: file_glob moved to FilesystemPathConfig for source reading.\nThis class handles format, compression, performance tuning, and output file naming.\n\nPERFORMANCE TUNING:\n    - chunk_size: Number of rows/records per batch. Larger = faster but more memory.\n    - use_pyarrow: Enable zero-copy Arrow format for Parquet/CSV (faster for large files).\n    - use_duckdb_csv_reader: Use DuckDB instead of pandas for CSV (faster).\n\nRECOMMENDED SETTINGS BY FILE SIZE:\n    - Small files (<10MB): chunk_size=1000, defaults are fine\n    - Medium files (10-100MB): chunk_size=10000\n    - Large files (>100MB): chunk_size=50000, use_pyarrow=True",
+      "properties": {
+        "chunk_size": {
+          "default": 10000,
+          "description": "Number of rows/records to process per batch.\nLarger values = better throughput but higher memory usage.\nRecommended: 1000 (small files), 10000 (medium), 50000+ (large)",
+          "maximum": 1000000,
+          "minimum": 100,
+          "title": "Chunk Size",
+          "type": "integer"
+        },
+        "compression": {
+          "$ref": "#/$defs/FileCompression",
+          "default": "snappy",
+          "description": "Compression type (snappy, gzip, lz4, zstd, none)"
+        },
+        "file_name_pattern": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Pattern for output file names (destination only).\nVariables: {table_name}, {timestamp}, {load_id}, {year}, {month}, {day}\nExample: '{table_name}_{timestamp}.parquet'",
+          "title": "File Name Pattern"
+        },
+        "format": {
+          "$ref": "#/$defs/FileFormat",
+          "default": "parquet",
+          "description": "File format (parquet, avro, json, jsonl, csv)"
+        },
+        "max_file_size_mb": {
+          "anyOf": [
+            {
+              "maximum": 1024,
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Maximum output file size in MB before splitting",
+          "title": "Max File Size Mb"
+        },
+        "use_duckdb_csv_reader": {
+          "default": true,
+          "description": "Use DuckDB reader for CSV files instead of pandas.\nDuckDB is typically faster and handles compression better.\nSet to False only if you need specific pandas CSV options.",
+          "title": "Use Duckdb Csv Reader",
+          "type": "boolean"
+        },
+        "use_pyarrow": {
+          "default": false,
+          "description": "Use PyArrow RecordBatch format instead of Python dicts.\nEnables zero-copy operations for better performance with large files.\nOnly effective for Parquet and CSV (with DuckDB reader).\nSet to True when loading large files (>100MB) to Databricks.",
+          "title": "Use Pyarrow",
+          "type": "boolean"
+        }
+      },
+      "title": "FilesystemFileOptionsConfig",
+      "type": "object"
+    },
+    "FilesystemPathConfig": {
+      "additionalProperties": false,
+      "description": "Filesystem path configuration with flexible partitioning support.\n\nSupports TWO patterns:\n\n1. MULTI-FOLDER PARTITIONED (GRM Germany style):\n   Base: file-repository/Trading/Oracle\n   Folders: {year}/{month}/{day}/ or year={year}/month={month}/day={day}/\n   Files: *.parquet\n   Result: file-repository/Trading/Oracle/2024/01/28/*.parquet\n\n2. SINGLE-FOLDER with date-in-filename:\n   Base: landing-zone/partner-feed\n   Folders: null (no folder partitioning)\n   Files: data_{year}{month}{day}*.csv\n   Result: landing-zone/partner-feed/data_20240128*.csv\n\nMULTI-LEVEL FOLDER STRUCTURES:\n   The base_path handles any static folder hierarchy BEFORE date folders:\n   \n   Example 1: germany/hr/advisor/2026/01/01/\n     base_path: \"germany/hr/advisor\"\n     folder_pattern: \"{year}/{month}/{day}/\"\n   \n   Example 2: uk/2026/01/01/\n     base_path: \"uk\"\n     folder_pattern: \"{year}/{month}/{day}/\"\n   \n   Example 3: data/region=emea/country=de/2026/01/01/\n     base_path: \"data/region=emea/country=de\"\n     folder_pattern: \"{year}/{month}/{day}/\"\n\nPath pattern variables:\n    - {year}, {month}, {day}, {hour}: Date components\n    - {source_name}, {table_name}: Runtime substitution\n    - {timestamp}, {load_id}: Load-time values",
+      "properties": {
+        "base_path": {
+          "description": "Base path within bucket (e.g., 'file-repository/Trading/Oracle')",
+          "title": "Base Path",
+          "type": "string"
+        },
+        "date_granularity": {
+          "$ref": "#/$defs/DateGranularity",
+          "default": "day",
+          "description": "Date granularity for folder partitioning or filename date extraction"
+        },
+        "file_glob": {
+          "default": "*",
+          "description": "Glob pattern for matching files. Supports date variables for single-folder pattern.\nExamples: '*.parquet', 'data_{year}{month}{day}*.csv', '**/*.json'",
+          "title": "File Glob",
+          "type": "string"
+        },
+        "folder_pattern": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": "{year}/{month}/{day}/",
+          "description": "Folder partition pattern with date variables. Set to null for single-folder sources where date is in filename.\nExamples: '{year}/{month}/{day}/', 'year={year}/month={month}/day={day}/' (Hive-style)",
+          "title": "Folder Pattern"
+        },
+        "partition_style": {
+          "$ref": "#/$defs/PartitionStyle",
+          "default": "numeric",
+          "description": "Partition folder naming style (numeric or hive_style)"
+        }
+      },
+      "required": [
+        "base_path"
+      ],
+      "title": "FilesystemPathConfig",
+      "type": "object"
+    },
+    "FilesystemProtocol": {
+      "description": "Supported filesystem protocols.",
+      "enum": [
+        "file",
+        "az",
+        "s3",
+        "gs",
+        "sftp"
+      ],
+      "title": "FilesystemProtocol",
+      "type": "string"
+    },
+    "NotificationConfig": {
+      "additionalProperties": false,
+      "description": "Notification configuration for pipeline events.",
+      "properties": {
+        "emails": {
+          "description": "Email addresses for notifications",
+          "items": {
+            "type": "string"
+          },
+          "title": "Emails",
+          "type": "array"
+        },
+        "include_error_details": {
+          "default": true,
+          "description": "Include error details in failure notifications",
+          "title": "Include Error Details",
+          "type": "boolean"
+        }
+      },
+      "title": "NotificationConfig",
+      "type": "object"
+    },
+    "NotificationsConfig": {
+      "additionalProperties": false,
+      "description": "Pipeline notifications configuration.",
+      "properties": {
+        "on_failure": {
+          "$ref": "#/$defs/NotificationConfig",
+          "description": "Notification settings for pipeline failures"
+        }
+      },
+      "title": "NotificationsConfig",
+      "type": "object"
+    },
+    "PartitionConfig": {
+      "additionalProperties": false,
+      "description": "Table partitioning configuration.",
+      "properties": {
+        "expiration_days": {
+          "anyOf": [
+            {
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Days after which partitions expire (optional)",
+          "title": "Expiration Days"
+        },
+        "field": {
+          "description": "Field to partition by",
+          "title": "Field",
+          "type": "string"
+        },
+        "grain": {
+          "default": "day",
+          "description": "Partition granularity",
+          "enum": [
+            "day",
+            "month",
+            "year"
+          ],
+          "title": "Grain",
+          "type": "string"
+        }
+      },
+      "required": [
+        "field"
+      ],
+      "title": "PartitionConfig",
+      "type": "object"
+    },
+    "PartitionStyle": {
+      "description": "Folder partition naming style.",
+      "enum": [
+        "numeric",
+        "hive_style"
+      ],
+      "title": "PartitionStyle",
+      "type": "string"
+    },
+    "PerformanceConfig": {
+      "additionalProperties": false,
+      "description": "Performance tuning configuration for dlt pipeline stages.\n\nThese settings map to dlt environment variables for parallelization\nand buffer management. Apply these BEFORE creating pipelines or sources.\n\nReference: https://dlthub.com/docs/reference/performance\n\nStage Worker Types:\n    - EXTRACT: Thread pool (I/O bound) - fetching data from sources\n    - NORMALIZE: Process pool (CPU bound) - converting data to load format\n    - LOAD: Thread pool (I/O bound) - writing to destination\n\nFile Rotation:\n    Enable file rotation to unlock parallel processing. Without rotation,\n    1 resource = 1 file = 1 worker. With rotation, 1 resource = many files\n    = many workers can process in parallel.\n\nExample YAML:\n    performance:\n      extract_workers: 5\n      normalize_workers: 4\n      load_workers: 20\n      extract_file_max_items: 100000\n      normalize_file_max_items: 100000\n\nEnvironment Variables Set:\n    - EXTRACT__WORKERS\n    - NORMALIZE__WORKERS  \n    - LOAD__WORKERS\n    - EXTRACT__DATA_WRITER__BUFFER_MAX_ITEMS\n    - NORMALIZE__DATA_WRITER__BUFFER_MAX_ITEMS\n    - EXTRACT__DATA_WRITER__FILE_MAX_ITEMS\n    - NORMALIZE__DATA_WRITER__FILE_MAX_ITEMS\n    - NORMALIZE__DATA_WRITER__DISABLE_COMPRESSION",
+      "properties": {
+        "add_dlt_id": {
+          "default": false,
+          "description": "Add _dlt_id column with unique row identifier. Incurs performance overhead as files must be rewritten. Not typically needed for Bronze append-only patterns.",
+          "title": "Add Dlt Id",
+          "type": "boolean"
+        },
+        "add_dlt_load_id": {
+          "default": true,
+          "description": "Add _dlt_load_id column to all tables. This column tracks which load operation created each row. Essential for Bronze layer auditing. Default True because dlt's Arrow/pyarrow backend skips this by default.",
+          "title": "Add Dlt Load Id",
+          "type": "boolean"
+        },
+        "disable_normalize_compression": {
+          "default": false,
+          "description": "Disable compression during normalization for speed (debugging only).",
+          "title": "Disable Normalize Compression",
+          "type": "boolean"
+        },
+        "enable_monitoring": {
+          "default": false,
+          "description": "Enable performance monitoring to verify worker pool configuration. When enabled, captures actual worker counts via monkey-patching dlt internals. Minimal overhead (<1%). Opt-in for validation and debugging only.",
+          "title": "Enable Monitoring",
+          "type": "boolean"
+        },
+        "extract_buffer_max_items": {
+          "default": 5000,
+          "description": "Items in extract buffer before writing to file.",
+          "maximum": 100000,
+          "minimum": 100,
+          "title": "Extract Buffer Max Items",
+          "type": "integer"
+        },
+        "extract_file_max_items": {
+          "anyOf": [
+            {
+              "maximum": 10000000,
+              "minimum": 1000,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Items per extract file (enables file rotation). Set to 100000 for large extractions to enable parallel normalize.",
+          "title": "Extract File Max Items"
+        },
+        "extract_workers": {
+          "default": 1,
+          "description": "Thread count for parallel resource extraction. Increase for multiple independent API endpoints or database tables.",
+          "maximum": 32,
+          "minimum": 1,
+          "title": "Extract Workers",
+          "type": "integer"
+        },
+        "load_workers": {
+          "default": 20,
+          "description": "Thread count for parallel loading (I/O-bound). Default 20 is usually sufficient.",
+          "maximum": 64,
+          "minimum": 1,
+          "title": "Load Workers",
+          "type": "integer"
+        },
+        "normalize_buffer_max_items": {
+          "default": 5000,
+          "description": "Items in normalize buffer before writing to file.",
+          "maximum": 100000,
+          "minimum": 100,
+          "title": "Normalize Buffer Max Items",
+          "type": "integer"
+        },
+        "normalize_file_max_items": {
+          "anyOf": [
+            {
+              "maximum": 10000000,
+              "minimum": 1000,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Items per normalized file (enables file rotation). Set to 100000 for large loads to enable parallel loading.",
+          "title": "Normalize File Max Items"
+        },
+        "normalize_workers": {
+          "default": 1,
+          "description": "Process count for parallel normalization (CPU-bound). Recommended: number of CPU cores - 1.",
+          "maximum": 16,
+          "minimum": 1,
+          "title": "Normalize Workers",
+          "type": "integer"
+        }
+      },
+      "title": "PerformanceConfig",
+      "type": "object"
+    },
+    "PipelineDataQualityConfig": {
+      "additionalProperties": false,
+      "description": "Pipeline-level data quality configuration.",
+      "properties": {
+        "enabled": {
+          "default": true,
+          "description": "Enable data quality checks",
+          "title": "Enabled",
+          "type": "boolean"
+        },
+        "fail_pipeline_on_failure": {
+          "default": false,
+          "description": "Fail pipeline if any DQ check fails",
+          "title": "Fail Pipeline On Failure",
+          "type": "boolean"
+        },
+        "results_table": {
+          "default": "audit_schema.dq_results",
+          "description": "Table for DQ results (schema.table format)",
+          "title": "Results Table",
+          "type": "string"
+        }
+      },
+      "title": "PipelineDataQualityConfig",
+      "type": "object"
+    },
+    "PipelineSettingsConfig": {
+      "additionalProperties": false,
+      "description": "Pipeline execution settings.",
+      "properties": {
+        "dev_mode": {
+          "default": false,
+          "description": "Dev mode resets schema/state on each run (use True for development)",
+          "title": "Dev Mode",
+          "type": "boolean"
+        },
+        "full_refresh": {
+          "default": false,
+          "description": "Force full refresh (ignore incremental state)",
+          "title": "Full Refresh",
+          "type": "boolean"
+        },
+        "log_level": {
+          "default": "INFO",
+          "description": "Logging level for pipeline file handler (DEBUG captures HTTP response codes like 429/500)",
+          "enum": [
+            "DEBUG",
+            "INFO",
+            "WARNING",
+            "ERROR"
+          ],
+          "title": "Log Level",
+          "type": "string"
+        },
+        "progress": {
+          "default": "log",
+          "description": "Progress display type",
+          "enum": [
+            "log",
+            "tqdm",
+            "alive_progress",
+            "enlighten"
+          ],
+          "title": "Progress",
+          "type": "string"
+        }
+      },
+      "title": "PipelineSettingsConfig",
+      "type": "object"
+    },
+    "RetryConfig": {
+      "additionalProperties": false,
+      "description": "Configuration for retry behavior with exponential backoff.\n\nUses tenacity library patterns.\nReference: https://tenacity.readthedocs.io/",
+      "properties": {
+        "backoff_multiplier": {
+          "default": 2.0,
+          "description": "Multiplier for exponential backoff",
+          "maximum": 5.0,
+          "minimum": 1.0,
+          "title": "Backoff Multiplier",
+          "type": "number"
+        },
+        "initial_delay_seconds": {
+          "default": 30.0,
+          "description": "Initial delay before first retry (seconds)",
+          "maximum": 600.0,
+          "minimum": 0.01,
+          "title": "Initial Delay Seconds",
+          "type": "number"
+        },
+        "max_attempts": {
+          "default": 3,
+          "description": "Maximum number of retry attempts",
+          "maximum": 10,
+          "minimum": 1,
+          "title": "Max Attempts",
+          "type": "integer"
+        },
+        "max_delay_seconds": {
+          "default": 300.0,
+          "description": "Maximum delay between retries (seconds)",
+          "maximum": 3600.0,
+          "minimum": 0.1,
+          "title": "Max Delay Seconds",
+          "type": "number"
+        },
+        "retriable_exceptions": {
+          "description": "Exception types that should trigger retry",
+          "items": {
+            "type": "string"
+          },
+          "title": "Retriable Exceptions",
+          "type": "array"
+        },
+        "retriable_status_codes": {
+          "description": "HTTP status codes that should trigger retry (for REST APIs)",
+          "items": {
+            "type": "integer"
+          },
+          "title": "Retriable Status Codes",
+          "type": "array"
+        }
+      },
+      "title": "RetryConfig",
+      "type": "object"
+    },
+    "SchemaContract": {
+      "additionalProperties": false,
+      "description": "Schema contract configuration for controlling schema evolution.\n\nControls three dimensions of schema evolution at the destination:\n\n1. **tables**: Can new tables be created?\n   - evolve: Allow new tables (recommended for Bronze, needed for first run)\n   - freeze: Block new tables (raises PipelineStepFailed)\n   - discard_row: Drop rows for unknown tables\n   - discard_value: Not applicable for tables dimension\n\n2. **columns**: Can new columns be added to existing tables?\n   - evolve: Allow new columns (flexible, good for development)\n   - freeze: Block new columns (strict production governance)\n   - discard_row: Drop entire row if new column detected\n   - discard_value: Set new column values to NULL, keep row\n\n3. **data_type**: Can column data types change?\n   - evolve: Allow type changes (may cause issues)\n   - freeze: Block type changes (recommended for production)\n   - discard_row: Drop row if type mismatch\n   - discard_value: Set mismatched values to NULL\n\nRecommended Defaults:\n    - Development: tables=evolve, columns=evolve, data_type=evolve\n    - Production: tables=evolve, columns=freeze, data_type=freeze\n\nWhy tables=evolve in production?\n    - First run: Tables don't exist yet, dlt must create them\n    - Child tables: dlt auto-creates nested tables (e.g., orders__items)\n    - New tables: When you add a new table to config\n\nReference: https://dlthub.com/docs/general-usage/schema-contracts\n\nExample YAML:\n    schema_contract:\n      tables: evolve      # Allow table creation\n      columns: freeze     # Block new columns\n      data_type: freeze   # Block type changes",
+      "properties": {
+        "columns": {
+          "$ref": "#/$defs/SchemaEvolutionMode",
+          "default": "freeze",
+          "description": "Control new column addition (evolve, freeze, discard_row, discard_value)"
+        },
+        "data_type": {
+          "$ref": "#/$defs/SchemaEvolutionMode",
+          "default": "freeze",
+          "description": "Control column type changes (evolve, freeze, discard_row, discard_value)"
+        },
+        "tables": {
+          "$ref": "#/$defs/SchemaEvolutionMode",
+          "default": "evolve",
+          "description": "Control new table creation (evolve, freeze, discard_row, discard_value)"
+        }
+      },
+      "title": "SchemaContract",
+      "type": "object"
+    },
+    "SchemaEvolutionMode": {
+      "description": "Schema evolution modes for dlt schema_contract.\n\nReference: https://dlthub.com/docs/general-usage/schema-contracts",
+      "enum": [
+        "evolve",
+        "freeze",
+        "discard_row",
+        "discard_value"
+      ],
+      "title": "SchemaEvolutionMode",
+      "type": "string"
+    },
+    "SecretsProviderConfig": {
+      "additionalProperties": false,
+      "description": "Configuration for secrets resolution.\n\nSecrets in YAML configs use ${secrets.xxx} pattern.\nThis configuration determines how those references are resolved at runtime.\n\nkey_mapping lets users map YAML secret keys (${secrets.xxx}) to\nthe actual secret names in their provider. This keeps the framework\nagnostic to provider naming conventions (e.g., KV allows only\nalphanumeric + dashes, Databricks scopes may use slashes, etc.).\nWhen key_mapping is omitted, the raw YAML key is passed as-is.\n\nExample YAML:\n    secrets_provider:\n      provider: \"azure_keyvault\"\n      vault_url: \"https://my-vault.vault.azure.net/\"\n      key_mapping:\n        azure_sql_host: \"azure-sql-host\"\n        azure_sql_password: \"azure-sql-password\"\n\nAzure Key Vault requires:\n    - azure-identity package\n    - azure-keyvault-secrets package\n    - Proper RBAC/access policies configured",
+      "properties": {
+        "key_mapping": {
+          "anyOf": [
+            {
+              "additionalProperties": {
+                "type": "string"
+              },
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Maps ${secrets.xxx} keys to provider-specific secret names. Left side = YAML key (from ${secrets.xxx}), right side = name in provider. If a key is not in the mapping, it is passed to the provider as-is.",
+          "title": "Key Mapping"
+        },
+        "prefix": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Environment variable prefix (for environment provider, e.g., 'DLT_' -> DLT_SECRET_NAME)",
+          "title": "Prefix"
+        },
+        "provider": {
+          "$ref": "#/$defs/SecretsProviderType",
+          "default": "dlt_secrets_file",
+          "description": "Secrets provider type (dlt_secrets_file, databricks, azure_keyvault, or environment)"
+        },
+        "scope": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Databricks secret scope name (for databricks provider)",
+          "title": "Scope"
+        },
+        "vault_url": {
+          "anyOf": [
+            {
+              "pattern": "^https://[a-zA-Z0-9-]+\\.vault\\.azure\\.net/?$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Azure Key Vault URL (for azure_keyvault provider)",
+          "title": "Vault Url"
+        }
+      },
+      "title": "SecretsProviderConfig",
+      "type": "object"
+    },
+    "SecretsProviderType": {
+      "description": "Supported secrets providers.\n\n- DLT_SECRETS_FILE: .dlt/secrets.toml file (dlt native, local development default)\n- DATABRICKS: Databricks secret scopes (production on Databricks)\n- AZURE_KEYVAULT: Azure Key Vault (Azure environments, managed identity)\n- ENVIRONMENT: Environment variables (CI/CD, local development)",
+      "enum": [
+        "dlt_secrets_file",
+        "databricks",
+        "azure_keyvault",
+        "environment"
+      ],
+      "title": "SecretsProviderType",
+      "type": "string"
+    },
+    "StagingConfig": {
+      "additionalProperties": false,
+      "description": "Staging configuration for data loading.",
+      "properties": {
+        "bucket": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Cloud bucket for filesystem staging (optional)",
+          "title": "Bucket"
+        },
+        "method": {
+          "default": "internal",
+          "description": "Staging method (internal uses Databricks staging)",
+          "enum": [
+            "internal",
+            "filesystem"
+          ],
+          "title": "Method",
+          "type": "string"
+        }
+      },
+      "title": "StagingConfig",
+      "type": "object"
+    }
+  },
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "additionalProperties": false,
   "properties": {
     "pipeline": {
-      "$defs": {
-        "AuditConfig": {
-          "additionalProperties": false,
-          "description": "Audit logging configuration.",
-          "properties": {
-            "catalog": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "default": null,
-              "description": "Catalog for audit table (defaults to destination catalog)",
-              "title": "Catalog"
-            },
-            "enabled": {
-              "default": true,
-              "description": "Enable audit logging to Delta table",
-              "title": "Enabled",
-              "type": "boolean"
-            },
-            "schema": {
-              "default": "audit_schema",
-              "description": "Schema for audit tables",
-              "title": "Schema",
-              "type": "string"
-            },
-            "table": {
-              "default": "pipeline_runs",
-              "description": "Table name for pipeline run logs",
-              "title": "Table",
-              "type": "string"
-            }
-          },
-          "title": "AuditConfig",
-          "type": "object"
-        },
-        "CheckpointConfig": {
-          "additionalProperties": false,
-          "description": "Checkpoint configuration for pipeline resume capability.",
-          "properties": {
-            "enabled": {
-              "default": true,
-              "description": "Enable checkpointing for resume capability",
-              "title": "Enabled",
-              "type": "boolean"
-            },
-            "save_after_each_resource": {
-              "default": true,
-              "description": "Save checkpoint after each resource completes",
-              "title": "Save After Each Resource",
-              "type": "boolean"
-            }
-          },
-          "title": "CheckpointConfig",
-          "type": "object"
-        },
-        "ClusterConfig": {
-          "additionalProperties": false,
-          "description": "Table clustering configuration.\n\nDestination-Specific Behavior:\n    - Databricks: Uses Liquid Clustering (not ZORDER). Use \"AUTO\" for automatic.\n                 Cannot use with partition on same table.\n    - BigQuery: Uses cluster_by, max 4 fields enforced by BigQuery.\n    - Oracle/MSSQL: Not supported (validation will reject).\n\nNote: Field count validation is done at runtime based on destination type.",
-          "properties": {
-            "fields": {
-              "anyOf": [
-                {
-                  "items": {
-                    "type": "string"
-                  },
-                  "type": "array"
-                },
-                {
-                  "const": "AUTO",
-                  "type": "string"
-                }
-              ],
-              "description": "Fields to cluster by, or 'AUTO' for Databricks auto liquid clustering",
-              "title": "Fields"
-            }
-          },
-          "required": [
-            "fields"
-          ],
-          "title": "ClusterConfig",
-          "type": "object"
-        },
-        "DatabaseDestinationConfig": {
-          "additionalProperties": false,
-          "description": "Database/DWH destination configuration.\n\nSupports Databricks Unity Catalog and BigQuery.\nReference: https://dlthub.com/docs/dlt-ecosystem/destinations/databricks",
-          "properties": {
-            "catalog": {
-              "description": "Unity Catalog name (Databricks) or project ID (BigQuery)",
-              "title": "Catalog",
-              "type": "string"
-            },
-            "schema": {
-              "description": "Schema/dataset name (use pattern: raw_{source_name})",
-              "title": "Schema",
-              "type": "string"
-            },
-            "staging": {
-              "$ref": "#/$defs/StagingConfig",
-              "description": "Staging configuration"
-            },
-            "type": {
-              "default": "databricks",
-              "description": "Destination type (databricks or bigquery)",
-              "enum": [
-                "databricks",
-                "bigquery"
-              ],
-              "title": "Type",
-              "type": "string"
-            }
-          },
-          "required": [
-            "catalog",
-            "schema"
-          ],
-          "title": "DatabaseDestinationConfig",
-          "type": "object"
-        },
-        "DateGranularity": {
-          "description": "Date granularity for folder partitioning.\n\nBased on GRM Germany FileRepositoryDateGranularity pattern.",
-          "enum": [
-            "year",
-            "year_month",
-            "day",
-            "hour"
-          ],
-          "title": "DateGranularity",
-          "type": "string"
-        },
-        "DuckDBDestinationConfig": {
-          "additionalProperties": false,
-          "description": "DuckDB destination configuration for local testing.\n\nDuckDB is an in-process OLAP database perfect for local development\nand CI/CD testing without requiring cloud credentials.\n\nUsage:\n    # In-memory database (ephemeral, lost after process ends)\n    destination:\n      type: \"duckdb\"\n      database: \":memory:\"\n      schema: \"main\"\n    \n    # Persistent file (survives process restart)\n    destination:\n      type: \"duckdb\"\n      database: \"test_output.duckdb\"\n      schema: \"test_data\"\n\nReference: https://dlthub.com/docs/dlt-ecosystem/destinations/duckdb",
-          "properties": {
-            "database": {
-              "description": "DuckDB file path or ':memory:' for in-memory database",
-              "title": "Database",
-              "type": "string"
-            },
-            "schema": {
-              "default": "main",
-              "description": "Schema name (default: 'main')",
-              "title": "Schema",
-              "type": "string"
-            },
-            "type": {
-              "const": "duckdb",
-              "default": "duckdb",
-              "title": "Type",
-              "type": "string"
-            }
-          },
-          "required": [
-            "database"
-          ],
-          "title": "DuckDBDestinationConfig",
-          "type": "object"
-        },
-        "FileCompression": {
-          "description": "Supported compression types for file output.",
-          "enum": [
-            "snappy",
-            "gzip",
-            "lz4",
-            "zstd",
-            "none"
-          ],
-          "title": "FileCompression",
-          "type": "string"
-        },
-        "FileFormat": {
-          "description": "Supported file formats for filesystem source/destination.\n\ndlt NATIVE READERS:\n    - CSV:     read_csv() via pandas, or read_csv_duckdb() for better performance\n    - PARQUET: read_parquet() via pyarrow\n    - JSONL:   read_jsonl() - line-delimited JSON\n\nFRAMEWORK-PROVIDED TRANSFORMERS:\n    - JSON:  Single JSON files - framework provides read_json() transformer\n\nREQUIRES CUSTOM TRANSFORMERS (contact central team):\n    - AVRO:  Apache Avro format (requires fastavro)\n    - XLSX:  Excel files (requires openpyxl)\n\nPERFORMANCE NOTES:\n    - Use read_csv_duckdb() instead of read_csv() for better CSV performance\n    - Set use_pyarrow=True for Parquet/CSV to enable zero-copy Arrow format\n    - Increase chunk_size for large files (10,000+ recommended for production)",
-          "enum": [
-            "parquet",
-            "csv",
-            "jsonl",
-            "json",
-            "avro"
-          ],
-          "title": "FileFormat",
-          "type": "string"
-        },
-        "FilesystemConnectionConfig": {
-          "additionalProperties": false,
-          "description": "Filesystem connection configuration.\n\nSupports multiple protocols: local, Azure ADLS, S3, GCS, SFTP.",
-          "properties": {
-            "account_name": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "default": null,
-              "description": "Storage account name (Azure) or access key ID (AWS)",
-              "title": "Account Name"
-            },
-            "bucket": {
-              "description": "Container/bucket name (e.g., 'databridge-landing')",
-              "title": "Bucket",
-              "type": "string"
-            },
-            "credentials": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "default": null,
-              "description": "Credentials reference (e.g., '${secrets.azure_storage_sas}')",
-              "title": "Credentials"
-            },
-            "host": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "default": null,
-              "description": "SFTP host (required for sftp protocol)",
-              "title": "Host"
-            },
-            "port": {
-              "anyOf": [
-                {
-                  "type": "integer"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "default": null,
-              "description": "SFTP port (default: 22)",
-              "title": "Port"
-            },
-            "protocol": {
-              "$ref": "#/$defs/FilesystemProtocol",
-              "default": "az",
-              "description": "Filesystem protocol (az, s3, gs, file, sftp)"
-            },
-            "username": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "default": null,
-              "description": "SFTP username",
-              "title": "Username"
-            }
-          },
-          "required": [
-            "bucket"
-          ],
-          "title": "FilesystemConnectionConfig",
-          "type": "object"
-        },
-        "FilesystemDestinationConfig": {
-          "additionalProperties": false,
-          "description": "Filesystem destination configuration for writing to partitioned folders.\n\nUse cases:\n    - Data lake staging before DWH load\n    - Cross-system data exchange\n    - Backup/archive to cloud storage\n\nPartition/Cluster Mapping:\n    - partition.field \u2192 Folder structure based on date_granularity\n    - cluster.fields \u2192 File-level row sorting within partitions",
-          "properties": {
-            "cluster": {
-              "anyOf": [
-                {
-                  "$ref": "#/$defs/ClusterConfig"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "default": null,
-              "description": "Cluster config (fields map to file-level sorting)"
-            },
-            "connection": {
-              "$ref": "#/$defs/FilesystemConnectionConfig",
-              "description": "Filesystem connection configuration"
-            },
-            "file_options": {
-              "$ref": "#/$defs/FilesystemFileOptionsConfig",
-              "description": "File format options"
-            },
-            "partition": {
-              "anyOf": [
-                {
-                  "$ref": "#/$defs/PartitionConfig"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "default": null,
-              "description": "Partition config (field maps to folder structure)"
-            },
-            "path": {
-              "$ref": "#/$defs/FilesystemPathConfig",
-              "description": "Path and partitioning configuration"
-            },
-            "type": {
-              "const": "filesystem",
-              "default": "filesystem",
-              "title": "Type",
-              "type": "string"
-            }
-          },
-          "required": [
-            "connection",
-            "path"
-          ],
-          "title": "FilesystemDestinationConfig",
-          "type": "object"
-        },
-        "FilesystemFileOptionsConfig": {
-          "additionalProperties": false,
-          "description": "File format, compression, and performance options for filesystem operations.\n\nNote: file_glob moved to FilesystemPathConfig for source reading.\nThis class handles format, compression, performance tuning, and output file naming.\n\nPERFORMANCE TUNING:\n    - chunk_size: Number of rows/records per batch. Larger = faster but more memory.\n    - use_pyarrow: Enable zero-copy Arrow format for Parquet/CSV (faster for large files).\n    - use_duckdb_csv_reader: Use DuckDB instead of pandas for CSV (faster).\n\nRECOMMENDED SETTINGS BY FILE SIZE:\n    - Small files (<10MB): chunk_size=1000, defaults are fine\n    - Medium files (10-100MB): chunk_size=10000\n    - Large files (>100MB): chunk_size=50000, use_pyarrow=True",
-          "properties": {
-            "chunk_size": {
-              "default": 10000,
-              "description": "Number of rows/records to process per batch.\nLarger values = better throughput but higher memory usage.\nRecommended: 1000 (small files), 10000 (medium), 50000+ (large)",
-              "maximum": 1000000,
-              "minimum": 100,
-              "title": "Chunk Size",
-              "type": "integer"
-            },
-            "compression": {
-              "$ref": "#/$defs/FileCompression",
-              "default": "snappy",
-              "description": "Compression type (snappy, gzip, lz4, zstd, none)"
-            },
-            "file_name_pattern": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "default": null,
-              "description": "Pattern for output file names (destination only).\nVariables: {table_name}, {timestamp}, {load_id}, {year}, {month}, {day}\nExample: '{table_name}_{timestamp}.parquet'",
-              "title": "File Name Pattern"
-            },
-            "format": {
-              "$ref": "#/$defs/FileFormat",
-              "default": "parquet",
-              "description": "File format (parquet, avro, json, jsonl, csv)"
-            },
-            "max_file_size_mb": {
-              "anyOf": [
-                {
-                  "maximum": 1024,
-                  "minimum": 1,
-                  "type": "integer"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "default": null,
-              "description": "Maximum output file size in MB before splitting",
-              "title": "Max File Size Mb"
-            },
-            "use_duckdb_csv_reader": {
-              "default": true,
-              "description": "Use DuckDB reader for CSV files instead of pandas.\nDuckDB is typically faster and handles compression better.\nSet to False only if you need specific pandas CSV options.",
-              "title": "Use Duckdb Csv Reader",
-              "type": "boolean"
-            },
-            "use_pyarrow": {
-              "default": false,
-              "description": "Use PyArrow RecordBatch format instead of Python dicts.\nEnables zero-copy operations for better performance with large files.\nOnly effective for Parquet and CSV (with DuckDB reader).\nSet to True when loading large files (>100MB) to Databricks.",
-              "title": "Use Pyarrow",
-              "type": "boolean"
-            }
-          },
-          "title": "FilesystemFileOptionsConfig",
-          "type": "object"
-        },
-        "FilesystemPathConfig": {
-          "additionalProperties": false,
-          "description": "Filesystem path configuration with flexible partitioning support.\n\nSupports TWO patterns:\n\n1. MULTI-FOLDER PARTITIONED (GRM Germany style):\n   Base: file-repository/Trading/Oracle\n   Folders: {year}/{month}/{day}/ or year={year}/month={month}/day={day}/\n   Files: *.parquet\n   Result: file-repository/Trading/Oracle/2024/01/28/*.parquet\n\n2. SINGLE-FOLDER with date-in-filename:\n   Base: landing-zone/partner-feed\n   Folders: null (no folder partitioning)\n   Files: data_{year}{month}{day}*.csv\n   Result: landing-zone/partner-feed/data_20240128*.csv\n\nMULTI-LEVEL FOLDER STRUCTURES:\n   The base_path handles any static folder hierarchy BEFORE date folders:\n   \n   Example 1: germany/hr/advisor/2026/01/01/\n     base_path: \"germany/hr/advisor\"\n     folder_pattern: \"{year}/{month}/{day}/\"\n   \n   Example 2: uk/2026/01/01/\n     base_path: \"uk\"\n     folder_pattern: \"{year}/{month}/{day}/\"\n   \n   Example 3: data/region=emea/country=de/2026/01/01/\n     base_path: \"data/region=emea/country=de\"\n     folder_pattern: \"{year}/{month}/{day}/\"\n\nPath pattern variables:\n    - {year}, {month}, {day}, {hour}: Date components\n    - {source_name}, {table_name}: Runtime substitution\n    - {timestamp}, {load_id}: Load-time values",
-          "properties": {
-            "base_path": {
-              "description": "Base path within bucket (e.g., 'file-repository/Trading/Oracle')",
-              "title": "Base Path",
-              "type": "string"
-            },
-            "date_granularity": {
-              "$ref": "#/$defs/DateGranularity",
-              "default": "day",
-              "description": "Date granularity for folder partitioning or filename date extraction"
-            },
-            "file_glob": {
-              "default": "*",
-              "description": "Glob pattern for matching files. Supports date variables for single-folder pattern.\nExamples: '*.parquet', 'data_{year}{month}{day}*.csv', '**/*.json'",
-              "title": "File Glob",
-              "type": "string"
-            },
-            "folder_pattern": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "default": "{year}/{month}/{day}/",
-              "description": "Folder partition pattern with date variables. Set to null for single-folder sources where date is in filename.\nExamples: '{year}/{month}/{day}/', 'year={year}/month={month}/day={day}/' (Hive-style)",
-              "title": "Folder Pattern"
-            },
-            "partition_style": {
-              "$ref": "#/$defs/PartitionStyle",
-              "default": "numeric",
-              "description": "Partition folder naming style (numeric or hive_style)"
-            }
-          },
-          "required": [
-            "base_path"
-          ],
-          "title": "FilesystemPathConfig",
-          "type": "object"
-        },
-        "FilesystemProtocol": {
-          "description": "Supported filesystem protocols.",
-          "enum": [
-            "file",
-            "az",
-            "s3",
-            "gs",
-            "sftp"
-          ],
-          "title": "FilesystemProtocol",
-          "type": "string"
-        },
-        "NotificationConfig": {
-          "additionalProperties": false,
-          "description": "Notification configuration for pipeline events.",
-          "properties": {
-            "emails": {
-              "description": "Email addresses for notifications",
-              "items": {
-                "type": "string"
-              },
-              "title": "Emails",
-              "type": "array"
-            },
-            "include_error_details": {
-              "default": true,
-              "description": "Include error details in failure notifications",
-              "title": "Include Error Details",
-              "type": "boolean"
-            }
-          },
-          "title": "NotificationConfig",
-          "type": "object"
-        },
-        "NotificationsConfig": {
-          "additionalProperties": false,
-          "description": "Pipeline notifications configuration.",
-          "properties": {
-            "on_failure": {
-              "$ref": "#/$defs/NotificationConfig",
-              "description": "Notification settings for pipeline failures"
-            }
-          },
-          "title": "NotificationsConfig",
-          "type": "object"
-        },
-        "PartitionConfig": {
-          "additionalProperties": false,
-          "description": "Table partitioning configuration.",
-          "properties": {
-            "expiration_days": {
-              "anyOf": [
-                {
-                  "minimum": 1,
-                  "type": "integer"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "default": null,
-              "description": "Days after which partitions expire (optional)",
-              "title": "Expiration Days"
-            },
-            "field": {
-              "description": "Field to partition by",
-              "title": "Field",
-              "type": "string"
-            },
-            "grain": {
-              "default": "day",
-              "description": "Partition granularity",
-              "enum": [
-                "day",
-                "month",
-                "year"
-              ],
-              "title": "Grain",
-              "type": "string"
-            }
-          },
-          "required": [
-            "field"
-          ],
-          "title": "PartitionConfig",
-          "type": "object"
-        },
-        "PartitionStyle": {
-          "description": "Folder partition naming style.",
-          "enum": [
-            "numeric",
-            "hive_style"
-          ],
-          "title": "PartitionStyle",
-          "type": "string"
-        },
-        "PerformanceConfig": {
-          "additionalProperties": false,
-          "description": "Performance tuning configuration for dlt pipeline stages.\n\nThese settings map to dlt environment variables for parallelization\nand buffer management. Apply these BEFORE creating pipelines or sources.\n\nReference: https://dlthub.com/docs/reference/performance\n\nStage Worker Types:\n    - EXTRACT: Thread pool (I/O bound) - fetching data from sources\n    - NORMALIZE: Process pool (CPU bound) - converting data to load format\n    - LOAD: Thread pool (I/O bound) - writing to destination\n\nFile Rotation:\n    Enable file rotation to unlock parallel processing. Without rotation,\n    1 resource = 1 file = 1 worker. With rotation, 1 resource = many files\n    = many workers can process in parallel.\n\nExample YAML:\n    performance:\n      extract_workers: 5\n      normalize_workers: 4\n      load_workers: 20\n      extract_file_max_items: 100000\n      normalize_file_max_items: 100000\n\nEnvironment Variables Set:\n    - EXTRACT__WORKERS\n    - NORMALIZE__WORKERS  \n    - LOAD__WORKERS\n    - EXTRACT__DATA_WRITER__BUFFER_MAX_ITEMS\n    - NORMALIZE__DATA_WRITER__BUFFER_MAX_ITEMS\n    - EXTRACT__DATA_WRITER__FILE_MAX_ITEMS\n    - NORMALIZE__DATA_WRITER__FILE_MAX_ITEMS\n    - NORMALIZE__DATA_WRITER__DISABLE_COMPRESSION",
-          "properties": {
-            "add_dlt_id": {
-              "default": false,
-              "description": "Add _dlt_id column with unique row identifier. Incurs performance overhead as files must be rewritten. Not typically needed for Bronze append-only patterns.",
-              "title": "Add Dlt Id",
-              "type": "boolean"
-            },
-            "add_dlt_load_id": {
-              "default": true,
-              "description": "Add _dlt_load_id column to all tables. This column tracks which load operation created each row. Essential for Bronze layer auditing. Default True because dlt's Arrow/pyarrow backend skips this by default.",
-              "title": "Add Dlt Load Id",
-              "type": "boolean"
-            },
-            "disable_normalize_compression": {
-              "default": false,
-              "description": "Disable compression during normalization for speed (debugging only).",
-              "title": "Disable Normalize Compression",
-              "type": "boolean"
-            },
-            "enable_monitoring": {
-              "default": false,
-              "description": "Enable performance monitoring to verify worker pool configuration. When enabled, captures actual worker counts via monkey-patching dlt internals. Minimal overhead (<1%). Opt-in for validation and debugging only.",
-              "title": "Enable Monitoring",
-              "type": "boolean"
-            },
-            "extract_buffer_max_items": {
-              "default": 5000,
-              "description": "Items in extract buffer before writing to file.",
-              "maximum": 100000,
-              "minimum": 100,
-              "title": "Extract Buffer Max Items",
-              "type": "integer"
-            },
-            "extract_file_max_items": {
-              "anyOf": [
-                {
-                  "maximum": 10000000,
-                  "minimum": 1000,
-                  "type": "integer"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "default": null,
-              "description": "Items per extract file (enables file rotation). Set to 100000 for large extractions to enable parallel normalize.",
-              "title": "Extract File Max Items"
-            },
-            "extract_workers": {
-              "default": 1,
-              "description": "Thread count for parallel resource extraction. Increase for multiple independent API endpoints or database tables.",
-              "maximum": 32,
-              "minimum": 1,
-              "title": "Extract Workers",
-              "type": "integer"
-            },
-            "load_workers": {
-              "default": 20,
-              "description": "Thread count for parallel loading (I/O-bound). Default 20 is usually sufficient.",
-              "maximum": 64,
-              "minimum": 1,
-              "title": "Load Workers",
-              "type": "integer"
-            },
-            "normalize_buffer_max_items": {
-              "default": 5000,
-              "description": "Items in normalize buffer before writing to file.",
-              "maximum": 100000,
-              "minimum": 100,
-              "title": "Normalize Buffer Max Items",
-              "type": "integer"
-            },
-            "normalize_file_max_items": {
-              "anyOf": [
-                {
-                  "maximum": 10000000,
-                  "minimum": 1000,
-                  "type": "integer"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "default": null,
-              "description": "Items per normalized file (enables file rotation). Set to 100000 for large loads to enable parallel loading.",
-              "title": "Normalize File Max Items"
-            },
-            "normalize_workers": {
-              "default": 1,
-              "description": "Process count for parallel normalization (CPU-bound). Recommended: number of CPU cores - 1.",
-              "maximum": 16,
-              "minimum": 1,
-              "title": "Normalize Workers",
-              "type": "integer"
-            }
-          },
-          "title": "PerformanceConfig",
-          "type": "object"
-        },
-        "PipelineDataQualityConfig": {
-          "additionalProperties": false,
-          "description": "Pipeline-level data quality configuration.",
-          "properties": {
-            "enabled": {
-              "default": true,
-              "description": "Enable data quality checks",
-              "title": "Enabled",
-              "type": "boolean"
-            },
-            "fail_pipeline_on_failure": {
-              "default": false,
-              "description": "Fail pipeline if any DQ check fails",
-              "title": "Fail Pipeline On Failure",
-              "type": "boolean"
-            },
-            "results_table": {
-              "default": "audit_schema.dq_results",
-              "description": "Table for DQ results (schema.table format)",
-              "title": "Results Table",
-              "type": "string"
-            }
-          },
-          "title": "PipelineDataQualityConfig",
-          "type": "object"
-        },
-        "PipelineSettingsConfig": {
-          "additionalProperties": false,
-          "description": "Pipeline execution settings.",
-          "properties": {
-            "dev_mode": {
-              "default": false,
-              "description": "Dev mode resets schema/state on each run (use True for development)",
-              "title": "Dev Mode",
-              "type": "boolean"
-            },
-            "full_refresh": {
-              "default": false,
-              "description": "Force full refresh (ignore incremental state)",
-              "title": "Full Refresh",
-              "type": "boolean"
-            },
-            "log_level": {
-              "default": "INFO",
-              "description": "Logging level for pipeline file handler (DEBUG captures HTTP response codes like 429/500)",
-              "enum": [
-                "DEBUG",
-                "INFO",
-                "WARNING",
-                "ERROR"
-              ],
-              "title": "Log Level",
-              "type": "string"
-            },
-            "progress": {
-              "default": "log",
-              "description": "Progress display type",
-              "enum": [
-                "log",
-                "tqdm",
-                "alive_progress",
-                "enlighten"
-              ],
-              "title": "Progress",
-              "type": "string"
-            }
-          },
-          "title": "PipelineSettingsConfig",
-          "type": "object"
-        },
-        "RetryConfig": {
-          "additionalProperties": false,
-          "description": "Configuration for retry behavior with exponential backoff.\n\nUses tenacity library patterns.\nReference: https://tenacity.readthedocs.io/",
-          "properties": {
-            "backoff_multiplier": {
-              "default": 2.0,
-              "description": "Multiplier for exponential backoff",
-              "maximum": 5.0,
-              "minimum": 1.0,
-              "title": "Backoff Multiplier",
-              "type": "number"
-            },
-            "initial_delay_seconds": {
-              "default": 30.0,
-              "description": "Initial delay before first retry (seconds)",
-              "maximum": 600.0,
-              "minimum": 0.01,
-              "title": "Initial Delay Seconds",
-              "type": "number"
-            },
-            "max_attempts": {
-              "default": 3,
-              "description": "Maximum number of retry attempts",
-              "maximum": 10,
-              "minimum": 1,
-              "title": "Max Attempts",
-              "type": "integer"
-            },
-            "max_delay_seconds": {
-              "default": 300.0,
-              "description": "Maximum delay between retries (seconds)",
-              "maximum": 3600.0,
-              "minimum": 0.1,
-              "title": "Max Delay Seconds",
-              "type": "number"
-            },
-            "retriable_exceptions": {
-              "description": "Exception types that should trigger retry",
-              "items": {
-                "type": "string"
-              },
-              "title": "Retriable Exceptions",
-              "type": "array"
-            },
-            "retriable_status_codes": {
-              "description": "HTTP status codes that should trigger retry (for REST APIs)",
-              "items": {
-                "type": "integer"
-              },
-              "title": "Retriable Status Codes",
-              "type": "array"
-            }
-          },
-          "title": "RetryConfig",
-          "type": "object"
-        },
-        "SchemaContract": {
-          "additionalProperties": false,
-          "description": "Schema contract configuration for controlling schema evolution.\n\nControls three dimensions of schema evolution at the destination:\n\n1. **tables**: Can new tables be created?\n   - evolve: Allow new tables (recommended for Bronze, needed for first run)\n   - freeze: Block new tables (raises PipelineStepFailed)\n   - discard_row: Drop rows for unknown tables\n   - discard_value: Not applicable for tables dimension\n\n2. **columns**: Can new columns be added to existing tables?\n   - evolve: Allow new columns (flexible, good for development)\n   - freeze: Block new columns (strict production governance)\n   - discard_row: Drop entire row if new column detected\n   - discard_value: Set new column values to NULL, keep row\n\n3. **data_type**: Can column data types change?\n   - evolve: Allow type changes (may cause issues)\n   - freeze: Block type changes (recommended for production)\n   - discard_row: Drop row if type mismatch\n   - discard_value: Set mismatched values to NULL\n\nRecommended Defaults:\n    - Development: tables=evolve, columns=evolve, data_type=evolve\n    - Production: tables=evolve, columns=freeze, data_type=freeze\n\nWhy tables=evolve in production?\n    - First run: Tables don't exist yet, dlt must create them\n    - Child tables: dlt auto-creates nested tables (e.g., orders__items)\n    - New tables: When you add a new table to config\n\nReference: https://dlthub.com/docs/general-usage/schema-contracts\n\nExample YAML:\n    schema_contract:\n      tables: evolve      # Allow table creation\n      columns: freeze     # Block new columns\n      data_type: freeze   # Block type changes",
-          "properties": {
-            "columns": {
-              "$ref": "#/$defs/SchemaEvolutionMode",
-              "default": "freeze",
-              "description": "Control new column addition (evolve, freeze, discard_row, discard_value)"
-            },
-            "data_type": {
-              "$ref": "#/$defs/SchemaEvolutionMode",
-              "default": "freeze",
-              "description": "Control column type changes (evolve, freeze, discard_row, discard_value)"
-            },
-            "tables": {
-              "$ref": "#/$defs/SchemaEvolutionMode",
-              "default": "evolve",
-              "description": "Control new table creation (evolve, freeze, discard_row, discard_value)"
-            }
-          },
-          "title": "SchemaContract",
-          "type": "object"
-        },
-        "SchemaEvolutionMode": {
-          "description": "Schema evolution modes for dlt schema_contract.\n\nReference: https://dlthub.com/docs/general-usage/schema-contracts",
-          "enum": [
-            "evolve",
-            "freeze",
-            "discard_row",
-            "discard_value"
-          ],
-          "title": "SchemaEvolutionMode",
-          "type": "string"
-        },
-        "SecretsProviderConfig": {
-          "additionalProperties": false,
-          "description": "Configuration for secrets resolution.\n\nSecrets in YAML configs use ${secrets.xxx} pattern.\nThis configuration determines how those references are resolved at runtime.\n\nkey_mapping lets users map YAML secret keys (${secrets.xxx}) to\nthe actual secret names in their provider. This keeps the framework\nagnostic to provider naming conventions (e.g., KV allows only\nalphanumeric + dashes, Databricks scopes may use slashes, etc.).\nWhen key_mapping is omitted, the raw YAML key is passed as-is.\n\nExample YAML:\n    secrets_provider:\n      provider: \"azure_keyvault\"\n      vault_url: \"https://my-vault.vault.azure.net/\"\n      key_mapping:\n        azure_sql_host: \"azure-sql-host\"\n        azure_sql_password: \"azure-sql-password\"\n\nAzure Key Vault requires:\n    - azure-identity package\n    - azure-keyvault-secrets package\n    - Proper RBAC/access policies configured",
-          "properties": {
-            "key_mapping": {
-              "anyOf": [
-                {
-                  "additionalProperties": {
-                    "type": "string"
-                  },
-                  "type": "object"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "default": null,
-              "description": "Maps ${secrets.xxx} keys to provider-specific secret names. Left side = YAML key (from ${secrets.xxx}), right side = name in provider. If a key is not in the mapping, it is passed to the provider as-is.",
-              "title": "Key Mapping"
-            },
-            "prefix": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "default": null,
-              "description": "Environment variable prefix (for environment provider, e.g., 'DLT_' -> DLT_SECRET_NAME)",
-              "title": "Prefix"
-            },
-            "provider": {
-              "$ref": "#/$defs/SecretsProviderType",
-              "default": "dlt_secrets_file",
-              "description": "Secrets provider type (dlt_secrets_file, databricks, azure_keyvault, or environment)"
-            },
-            "scope": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "default": null,
-              "description": "Databricks secret scope name (for databricks provider)",
-              "title": "Scope"
-            },
-            "vault_url": {
-              "anyOf": [
-                {
-                  "pattern": "^https://[a-zA-Z0-9-]+\\.vault\\.azure\\.net/?$",
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "default": null,
-              "description": "Azure Key Vault URL (for azure_keyvault provider)",
-              "title": "Vault Url"
-            }
-          },
-          "title": "SecretsProviderConfig",
-          "type": "object"
-        },
-        "SecretsProviderType": {
-          "description": "Supported secrets providers.\n\n- DLT_SECRETS_FILE: .dlt/secrets.toml file (dlt native, local development default)\n- DATABRICKS: Databricks secret scopes (production on Databricks)\n- AZURE_KEYVAULT: Azure Key Vault (Azure environments, managed identity)\n- ENVIRONMENT: Environment variables (CI/CD, local development)",
-          "enum": [
-            "dlt_secrets_file",
-            "databricks",
-            "azure_keyvault",
-            "environment"
-          ],
-          "title": "SecretsProviderType",
-          "type": "string"
-        },
-        "StagingConfig": {
-          "additionalProperties": false,
-          "description": "Staging configuration for data loading.",
-          "properties": {
-            "bucket": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "default": null,
-              "description": "Cloud bucket for filesystem staging (optional)",
-              "title": "Bucket"
-            },
-            "method": {
-              "default": "internal",
-              "description": "Staging method (internal uses Databricks staging)",
-              "enum": [
-                "internal",
-                "filesystem"
-              ],
-              "title": "Method",
-              "type": "string"
-            }
-          },
-          "title": "StagingConfig",
-          "type": "object"
-        }
-      },
       "additionalProperties": false,
       "description": "Pipeline configuration.\n\nFile location: configs/pipelines/{pipeline_name}.yaml\n\nThis is the main entry point for running an ingestion pipeline.",
       "properties": {
