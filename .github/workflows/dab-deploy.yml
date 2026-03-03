@@ -65,8 +65,8 @@ jobs:
         if: ${{ inputs.deploy && inputs.configs_source_path != '' && inputs.volume_configs_path != '' }}
         working-directory: ${{ inputs.bundle_root }}
         run: |
-          echo "Uploading configs from ${{ inputs.configs_source_path }} to dbfs:${{ inputs.volume_configs_path }}"
+          echo "Uploading configs from ${{ inputs.configs_source_path }} to ${{ inputs.volume_configs_path }}"
           databricks fs cp --recursive --overwrite \
             "${{ inputs.configs_source_path }}" \
-            "dbfs:${{ inputs.volume_configs_path }}"
+            "${{ inputs.volume_configs_path }}"
           echo "Config upload complete."
